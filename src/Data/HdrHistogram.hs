@@ -39,14 +39,14 @@ new lowest' highest' s@(SigificantFigures sigfigs) = histogram
       highest = highest',
       sigFigures = s,
       unitMagnitude = unitMagnitude',
-      subBucketHalfCountMagnitude = ceiling subBucketHalfCountMagnitude',
+      subBucketHalfCountMagnitude = subBucketHalfCountMagnitude',
       subBucketHalfCount          = floor $ subBucketCount' / 2,
       subBucketMask               = floor (subBucketCount' - 1) `shift` toInt unitMagnitude',
       subBucketCount              = floor subBucketCount',
       bucketCount                 = bucketCount',
-      countsLen                   = (bucketCount' + 1) * floor (subBucketCount' / 2),
+      countsLen                   = countsLen',
       totalCount                  = 0,
-      counts                     = U.replicate bucketCount' 0
+      counts                     = U.replicate countsLen' 0
       }
 
     toDouble :: (Real a) => a -> Double
@@ -59,16 +59,20 @@ new lowest' highest' s@(SigificantFigures sigfigs) = histogram
       where
         m = logBase 2 (toDouble lowest')
 
-    subBucketHalfCountMagnitude' :: Double
+    subBucketHalfCountMagnitude' :: Int
     subBucketHalfCountMagnitude' = max 0 (m - 1)
       where
-        m = (logBase 2 . (* 2) . (** 10) . toDouble) sigfigs
+        m = (ceiling . logBase 2 . (* 2) . (10 **) . toDouble) sigfigs
 
     subBucketCount' :: Double
-    subBucketCount' = (subBucketHalfCountMagnitude' + 1) ** 2
+    subBucketCount' = 2 ** (fromIntegral $ subBucketHalfCountMagnitude' + 1)
 
     bucketCount' :: Int
-    bucketCount' = length $ takeWhile (< highest') $ iterate (`shift` 1) 1
+    bucketCount' = 1 + (length $ takeWhile (<= highest') $ iterate (`shift` 1) smallestUntrackable)
+      where
+        smallestUntrackable = (floor subBucketCount') `shift` toInt unitMagnitude'
+
+    countsLen' = (bucketCount' + 1) * floor (subBucketCount' / 2)
 
 
 merge :: Histogram a b -> Histogram a b -> Maybe (Histogram a b)
@@ -83,17 +87,18 @@ recordValues h val count = h {
     counts = counts h // [(index, (counts h ! index) + count)]
     }
   where
-    index = countsIndex h i sub
-      where
-        i = bucketIndex h val
-        sub = subBucketIndex h val i
+    index = indexForValue h val
 
+indexForValue h val = countsIndex h i sub
+  where
+    i = bucketIndex h val
+    sub = subBucketIndex h val i
 
 bucketIndex :: (Integral a, FiniteBits a) => Histogram a b -> a -> Int
-bucketIndex h a = fromIntegral $ m - fromIntegral (subBucketHalfCountMagnitude h)
+bucketIndex h a = fromIntegral $ m - fromIntegral (subBucketHalfCountMagnitude h + 1)
   where
     m :: Int64
-    m = fromIntegral $ bitLength (a .|. subBucketMask h) - fromIntegral (unitMagnitude h)
+    m = fromIntegral $ (bitLength (a .|. subBucketMask h)) - fromIntegral (unitMagnitude h)
 
 subBucketIndex :: forall a b. (Integral a, FiniteBits a) => Histogram a b -> a -> Int -> Int
 subBucketIndex h v i = fromIntegral $ v `shiftR` fromIntegral toShift
