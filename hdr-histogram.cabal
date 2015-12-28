@@ -17,8 +17,10 @@ library
   hs-source-dirs:      src
   exposed-modules:     Data.HdrHistogram
                        Data.HdrHistogram.Config
+                       Data.HdrHistogram.Mutable
   build-depends:       base >= 4.7 && < 5
-                     , vector >= 0.10 && < 0.11
+                     , vector >= 0.11 && < 0.12
+                     , primitive >= 0.6 && < 0.7
                      , QuickCheck
   default-language:    Haskell2010
 
@@ -29,7 +31,9 @@ test-suite hdr-histogram-test
   other-modules:
                        Data.HdrHistogramSpec
                        Data.HdrHistogram.ConfigSpec
+                       Data.HdrHistogram.MutableSpec
                        Test.Expectations
+                       Test.Utils
   build-depends:       base
                      , hdr-histogram
                      , hspec

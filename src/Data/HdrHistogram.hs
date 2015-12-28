@@ -1,6 +1,8 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Data.HdrHistogram (
-  Histogram, histogram, record, percentile, config, HistogramConfig, significantFigures
+  HistogramConfig, config,
+  Histogram(..), histogram, record, percentile,
+  SignificantFigures, significantFigures
   ) where
 
 import           Data.Bits                (Bits, FiniteBits)
