@@ -126,13 +126,16 @@ bucketIndex h a = m - (subBucketHalfCountMagnitude h + 1)
     m = fromIntegral $ bitLength (a .|. subBucketMask h) - fromIntegral (unitMagnitude h)
 
 subBucketIndex :: forall a. (Integral a, FiniteBits a) => HistogramConfig a -> a -> Int -> Int
-subBucketIndex h v i = fromIntegral $ v `shiftR` fromIntegral toShift
+subBucketIndex h v i = fromIntegral $ v `shiftR` toShift
   where
-    toShift :: a
-    toShift = fromIntegral i + unitMagnitude h
+    toShift :: Int
+    toShift = i + fromIntegral (unitMagnitude h)
 
 countsIndex :: HistogramConfig a -> Int -> Int -> Int
-countsIndex h bucketIdx subBucketIdx = (subBucketIdx - subBucketHalfCount h) + ((bucketIdx + 1) `shift` subBucketHalfCountMagnitude h)
+countsIndex h bucketIdx subBucketIdx = sub + bucket
+  where
+    sub = subBucketIdx - subBucketHalfCount h
+    bucket = (bucketIdx + 1) `shift` subBucketHalfCountMagnitude h
 
 valueFromSubBucket :: (Integral a, Bits a) => HistogramConfig a -> Int -> Int -> Range a
 valueFromSubBucket h bucketIndex' subBucketIndex' = Range lower' upper'
