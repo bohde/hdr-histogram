@@ -36,18 +36,27 @@ histogram config' = do
   counts = vect
   }
 
+{-# INLINEABLE record #-}
 record :: (Integral a, Integral b, FiniteBits a, U.Unbox b, PrimMonad m) =>
          Histogram (PrimState m) a b -> a -> m ()
-record h val = recordValues h val 1
+record h = go
+  where
+    go val = recordValues h val 1
 
+{-# INLINEABLE recordValues #-}
 recordValues :: (Integral a, Integral b, FiniteBits a, U.Unbox b, PrimMonad m) =>
                Histogram (PrimState m) a b -> a -> b -> m ()
-recordValues h val count = do
-  modifyMutVar' (totalCount h) (+ count)
-  MU.unsafeModify (counts h) (+ count) index
+recordValues h = go
   where
     c = _config h
-    index = asInt c $ asIndex c val
+    getIndex = asInt c . asIndex c
+    go val count = do
+      modifyMutVar' (totalCount h) (+ count)
+      modify (counts h) (+ count) (getIndex val)
+        where
+          modify v f i = do
+            a <- MU.unsafeRead v i
+            MU.unsafeWrite v i (f a)
 
 freeze :: (MU.Unbox b, PrimMonad m) => Histogram (PrimState m) a b -> m (H.Histogram a b)
 freeze (Histogram c total vec) = do

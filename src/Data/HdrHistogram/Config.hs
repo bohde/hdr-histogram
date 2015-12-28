@@ -120,20 +120,19 @@ config lowest' highest' s@(SignificantFigures sigfigs) = config'
 
     countsLen' = (bucketCount' + 1) * floor (subBucketCount' / 2)
 
-data Index = Index Int Int
+data Index = Index {
+  bucket    :: Int,
+  subBucket :: Int
+  }
 
-bucket :: Index -> Int
-bucket (Index b _) = b
-
-subBucket :: Index -> Int
-subBucket (Index _ s) = s
-
+{-# INLINEABLE asInt #-}
 asInt :: HistogramConfig a -> Index -> Int
-asInt c (Index b sub) = (sub' + bucket') - 1
+asInt c = go
   where
-    sub' = sub - subBucketHalfCount c
-    bucket' = (b + 1) `shift` subBucketHalfCountMagnitude c
-
+    go (Index b sub) = (sub' + bucket') - 1
+      where
+        sub' = sub - subBucketHalfCount c
+        bucket' = (b + 1) `shift` subBucketHalfCountMagnitude c
 
 fromInt :: HistogramConfig a -> Int -> Index
 fromInt c i = if bucket' < 0
@@ -145,18 +144,21 @@ fromInt c i = if bucket' < 0
     sub' = i' .&. (subBucketHalfCount c - 1) + subBucketHalfCount c
 
 
+{-# INLINEABLE asIndex #-}
 asIndex :: (Integral a, FiniteBits a) => HistogramConfig a -> a -> Index
-asIndex c a = Index bucket' sub
+asIndex c = go
   where
-    bucket' = m - (subBucketHalfCountMagnitude c + 1)
+    go a = Index bucket' sub
       where
-        m :: Int
-        m = fromIntegral $ bitLength (a .|. subBucketMask c) - fromIntegral (unitMagnitude c)
+        bucket' = m - (subBucketHalfCountMagnitude c + 1)
+          where
+            m :: Int
+            m = fromIntegral $ bitLength (a .|. subBucketMask c) - fromIntegral (unitMagnitude c)
 
-    sub = fromIntegral $ a `shiftR` toShift
-      where
-        toShift :: Int
-        toShift = bucket' + fromIntegral (unitMagnitude c)
+        sub = fromIntegral $ a `shiftR` toShift
+          where
+            toShift :: Int
+            toShift = bucket' + fromIntegral (unitMagnitude c)
 
 fromIndex :: (Integral a, Bits a) => HistogramConfig a -> Index -> Range a
 fromIndex c (Index bucket' sub) = Range lower' upper'
@@ -166,5 +168,6 @@ fromIndex c (Index bucket' sub) = Range lower' upper'
     range = 1 `shift` toShift
     upper' = (lower' + range) - 1
 
+{-# INLINEABLE bitLength #-}
 bitLength :: FiniteBits b => b -> Int
 bitLength b = finiteBitSize b - countLeadingZeros b

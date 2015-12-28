@@ -1,6 +1,6 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE RankNTypes     #-}
-module Data.HdrHistogram.MutableBench where
+module Data.HdrHistogram.MutableBench (benchmarks) where
 
 import           Control.Monad             (replicateM_)
 import           Control.Monad.Primitive   (PrimMonad, PrimState)
