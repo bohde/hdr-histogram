@@ -2,8 +2,7 @@
 module Data.HdrHistogram.ConfigSpec where
 
 import           Control.Monad            (unless)
-import           Data.Bits                (Bits)
-import           Data.Bits                (FiniteBits)
+import           Data.Bits                (Bits, FiniteBits)
 import           Data.HdrHistogram.Config
 import qualified Data.Int                 as Int
 import qualified Data.Word                as Word
@@ -28,11 +27,29 @@ runSpecType (SpecType s) = s
 
 typeSpec :: forall a. (Show a, Integral a, Random a, Arbitrary a, Bounded a, FiniteBits a) => SpecType a
 typeSpec = SpecType $ do
-  prop "should generate bucket indices in bounds" $ \(ConfigAndVal config' (val :: a)) ->
-    bucketIndex config' val `shouldBeLessThan` bucketCount config'
+  prop "should generate bucket indices in bounds" $ \(ConfigAndVal config' (val :: a)) -> do
+    let
+      bi = bucketIndex config' val
+    bi `shouldBeLessThan` bucketCount config'
+    bi `shouldBeGreaterThanOrEqual` 0
 
-  prop "not make out of bounds indices" $ \(ConfigAndVal config' (val :: a)) ->
-    indexForValue config' val `shouldBeLessThan` countsLen config'
+  prop "not make out of bounds indices" $ \(ConfigAndVal config' (val :: a)) -> do
+    let
+      i = indexForValue config' val
+    i `shouldBeLessThan` countsLen config'
+    i `shouldBeGreaterThanOrEqual` 0
+
+  prop "index 0 should contain the lowest value" $ \(config' :: HistogramConfig a) -> do
+    let
+      val' = valueAtIndex config' 1
+    upper val' `shouldBeGreaterThanOrEqual` lowest config'
+    lower val' `shouldBeLessThanOrEqual` lowest config'
+
+  prop "it should produce estimated vals" $ \(ConfigAndVal config' (val :: a)) -> do
+    let
+      val' = valueAtIndex config' $ indexForValue config' val
+    upper val' `shouldBeGreaterThanOrEqual` val
+    lower val' `shouldBeLessThanOrEqual` val
 
 spec :: Spec
 spec = do
@@ -52,7 +69,9 @@ spec = do
       floor (2 ** (i - 1)) `shouldBeLessThanOrEqual` (a :: Int)
 
   describe "HistogramConfig Int" $ runSpecType (typeSpec :: SpecType Int)
+  describe "HistogramConfig Int16" $ runSpecType (typeSpec :: SpecType Int.Int16)
   describe "HistogramConfig Int32" $ runSpecType (typeSpec :: SpecType Int.Int32)
   describe "HistogramConfig Int64" $ runSpecType (typeSpec :: SpecType Int.Int64)
+  describe "HistogramConfig Word16" $ runSpecType (typeSpec :: SpecType Word.Word16)
   describe "HistogramConfig Word32" $ runSpecType (typeSpec :: SpecType Word.Word32)
   describe "HistogramConfig Word64" $ runSpecType (typeSpec :: SpecType Word.Word64)

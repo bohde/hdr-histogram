@@ -10,6 +10,7 @@ module Data.HdrHistogram.Config (
 
 import           Data.Bits       (Bits, FiniteBits, countLeadingZeros,
                                   finiteBitSize, shift, shiftR, (.&.), (.|.))
+import           Data.Bits       (bitSizeMaybe)
 import           Data.Int        (Int64)
 import           Test.QuickCheck (Arbitrary (..), Large (..), Positive (..),
                                   elements, getLarge, suchThat)
@@ -44,6 +45,14 @@ instance (Arbitrary a, Bounded a, Integral a, Bits a) => Arbitrary (HistogramCon
     (Large max') <- arbitrary `suchThat` ((> min') . getLarge)
     s <- arbitrary
     return $ config min' max' s
+
+  shrink c = filter (/= c) vals
+    where
+      vals = do
+        min' <- [0..lowest c]
+        max' <- [min'+1..highest c]
+        s <- shrink $ sigFigures c
+        return $ config min' max' s
 
 data Range a = Range a a
 
@@ -80,9 +89,15 @@ config lowest' highest' s@(SignificantFigures sigfigs) = config'
         m = logBase 2 (toDouble lowest')
 
     subBucketHalfCountMagnitude' :: Int
-    subBucketHalfCountMagnitude' = max 0 (m - 1)
+    subBucketHalfCountMagnitude' = max 0 (magnitude - 1)
       where
-        m = (ceiling . logBase 2 . (* 2) . (10 **) . toDouble) sigfigs
+        desiredMagnitude = (ceiling . logBase 2 . (* 2) . (10 **) . toDouble) sigfigs
+        magnitude = case bitSizeMaybe (0 :: a) of
+          Nothing -> desiredMagnitude
+          Just i ->  min possibleMagnitude desiredMagnitude
+            where
+              possibleMagnitude = i - 1 - fromIntegral unitMagnitude'
+
 
     subBucketCount' :: Double
     subBucketCount' = 2 ** fromIntegral (subBucketHalfCountMagnitude' + 1)
