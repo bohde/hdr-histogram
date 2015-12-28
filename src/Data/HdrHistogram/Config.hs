@@ -123,10 +123,10 @@ subBucket :: Index -> Int
 subBucket (Index _ s) = s
 
 asInt :: HistogramConfig a -> Index -> Int
-asInt c (Index bucket sub) = (sub' + bucket') - 1
+asInt c (Index b sub) = (sub' + bucket') - 1
   where
     sub' = sub - subBucketHalfCount c
-    bucket' = (bucket + 1) `shift` subBucketHalfCountMagnitude c
+    bucket' = (b + 1) `shift` subBucketHalfCountMagnitude c
 
 
 fromInt :: HistogramConfig a -> Int -> Index

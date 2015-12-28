@@ -23,6 +23,7 @@ instance (Random a, Arbitrary a, Bounded a, Integral a, Bits a) => Arbitrary (Co
     vals <- listOf1 $ choose (lowest config', highest config')
     return $ ConfigAndVals config' vals
 
+median :: Ord a => U.Vector a -> a
 median s = sorted ! middle
     where
      middle = if odd len
@@ -35,14 +36,14 @@ median s = sorted ! middle
      len = U.length s
 
 spec :: Spec
-spec = do
+spec =
   describe "Histogram" $ do
     it "should give equal result to reference" $ do
       let
         empty :: Either String (Histogram Int Int)
         empty = (histogram . config 1 10) <$> significantFigures 1
         mark :: Histogram Int Int -> Histogram Int Int
-        mark h = foldr (flip record) h [1..10]
+        mark h' = foldr (flip record) h' [1..10]
         h = fmap mark empty
       fmap (upper . (`percentile` 90.0)) h `shouldBe` Right 9
 

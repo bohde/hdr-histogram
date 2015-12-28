@@ -38,11 +38,11 @@ recordValues h val count = h {
     index = asInt c $ asIndex c val
 
 
-merge :: Histogram a b -> Histogram a b -> Histogram a b
-merge = undefined
-
-recordCorrectedValues :: Integral a => Histogram a b -> a -> a -> Histogram a b
-recordCorrectedValues = undefined
+-- merge :: Histogram a b -> Histogram a b -> Histogram a b
+-- merge = undefined
+--
+-- recordCorrectedValues :: Integral a => Histogram a b -> a -> a -> Histogram a b
+-- recordCorrectedValues = undefined
 
 percentile :: (Integral a, Integral b, U.Unbox b, Bits a) => Histogram a b -> Float -> Range a
 percentile h q = case U.find ((>= count) . snd) totals of

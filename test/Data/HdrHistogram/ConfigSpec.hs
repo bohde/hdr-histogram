@@ -1,7 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Data.HdrHistogram.ConfigSpec where
 
-import           Control.Monad            (unless)
 import           Data.Bits                (Bits, FiniteBits)
 import           Data.HdrHistogram.Config
 import qualified Data.Int                 as Int
@@ -32,6 +31,8 @@ instance (Random a, Arbitrary a, Bounded a, Integral a, Bits a) => Arbitrary (Co
 
 
 data SpecType a = SpecType Spec
+
+runSpecType :: SpecType a -> Spec
 runSpecType (SpecType s) = s
 
 typeSpec :: forall a. (Show a, Integral a, Random a, Arbitrary a, Bounded a, FiniteBits a) => SpecType a
@@ -84,7 +85,7 @@ spec = do
       $ \(NonNegative a) -> do
       let
         i = fromIntegral (bitLength a)
-      floor (2 ** i) `shouldBeGreaterThan` (a :: Int)
+      floor ((2 :: Double) ** i) `shouldBeGreaterThan` (a :: Int)
       floor (2 ** (i - 1)) `shouldBeLessThanOrEqual` (a :: Int)
 
   describe "HistogramConfig Int" $ runSpecType (typeSpec :: SpecType Int)
