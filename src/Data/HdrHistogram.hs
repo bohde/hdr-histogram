@@ -1,6 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Data.HdrHistogram (
-  Histogram, histogram, record, percentile, config, significantFigures
+  Histogram, histogram, record, percentile, config, HistogramConfig, significantFigures
   ) where
 
 import           Data.Bits                (Bits, FiniteBits)
@@ -43,10 +43,10 @@ merge = undefined
 recordCorrectedValues :: Integral a => Histogram a b -> a -> a -> Histogram a b
 recordCorrectedValues = undefined
 
-percentile :: (Integral a, Integral b, U.Unbox b, Bits a) => Histogram a b -> Float -> a
+percentile :: (Integral a, Integral b, U.Unbox b, Bits a) => Histogram a b -> Float -> Range a
 percentile h q = case U.find ((>= count) . snd) totals of
-  Nothing -> 0
-  Just (i, _) -> upper $ valueAtIndex (_config h) i
+  Nothing -> Range 0 0
+  Just (i, _) -> valueAtIndex (_config h) i
   where
     q' = min q 100
     count = floor $ (q' / 100) * fromIntegral (totalCount h) + 0.5

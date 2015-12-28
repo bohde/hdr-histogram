@@ -3,7 +3,7 @@ module Data.HdrHistogram.Config (
   SignificantFigures,
   significantFigures,
   HistogramConfig(..), config,
-  Range, upper, lower,
+  Range(..), upper, lower,
   indexForValue, valueAtIndex, bucketIndex,
   bitLength
   ) where

@@ -1,7 +1,8 @@
 module Test.Expectations (
   shouldBeLessThan,
   shouldBeLessThanOrEqual,
-  shouldBeGreaterThan
+  shouldBeGreaterThan,
+  shouldBeGreaterThanOrEqual
   ) where
 
 import           Control.Monad (unless)
@@ -19,7 +20,10 @@ shouldBeLessThan :: (Show a, Ord a) => a -> a -> Expectation
 shouldBeLessThan = compareWith (>) "is not less than"
 
 shouldBeLessThanOrEqual :: (Show a, Ord a) => a -> a -> Expectation
-shouldBeLessThanOrEqual = compareWith (>=) "is not less than"
+shouldBeLessThanOrEqual = compareWith (>=) "is not less than or equal"
 
 shouldBeGreaterThan :: (Show a, Ord a) => a -> a -> Expectation
 shouldBeGreaterThan = compareWith (<) "is not greater than"
+
+shouldBeGreaterThanOrEqual :: (Show a, Ord a) => a -> a -> Expectation
+shouldBeGreaterThanOrEqual = compareWith (<=) "is not greater than or equal"
