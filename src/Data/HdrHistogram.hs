@@ -34,7 +34,8 @@ recordValues h val count = h {
     counts = counts h // [(index, (counts h ! index) + count)]
     }
   where
-    index = indexForValue (_config h) val
+    c = _config h
+    index = asInt c $ asIndex c val
 
 
 merge :: Histogram a b -> Histogram a b -> Histogram a b
@@ -46,8 +47,10 @@ recordCorrectedValues = undefined
 percentile :: (Integral a, Integral b, U.Unbox b, Bits a) => Histogram a b -> Float -> Range a
 percentile h q = case U.find ((>= count) . snd) totals of
   Nothing -> Range 0 0
-  Just (i, _) -> valueAtIndex (_config h) i
+  Just (i, _) -> valueAtIndex i
   where
+    c = _config h
+    valueAtIndex = fromIndex c . fromInt c
     q' = min q 100
     count = floor $ (q' / 100) * fromIntegral (totalCount h) + 0.5
     totals = U.scanl f (0 :: Int, 0) withIndex

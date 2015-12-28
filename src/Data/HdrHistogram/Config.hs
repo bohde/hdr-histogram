@@ -4,14 +4,15 @@ module Data.HdrHistogram.Config (
   significantFigures,
   HistogramConfig(..), config,
   Range(..), upper, lower,
-  indexForValue, valueAtIndex, bucketIndex,
+  Index, bucket, subBucket,
+  asInt, fromInt,
+  asIndex, fromIndex,
   bitLength
   ) where
 
-import           Data.Bits       (Bits, FiniteBits, countLeadingZeros,
-                                  finiteBitSize, shift, shiftR, (.&.), (.|.))
-import           Data.Bits       (bitSizeMaybe)
-import           Data.Int        (Int64)
+import           Data.Bits       (Bits, FiniteBits, bitSizeMaybe,
+                                  countLeadingZeros, finiteBitSize, shift,
+                                  shiftR, (.&.), (.|.))
 import           Test.QuickCheck (Arbitrary (..), Large (..), Positive (..),
                                   elements, getLarge, suchThat)
 
@@ -113,46 +114,50 @@ config lowest' highest' s@(SignificantFigures sigfigs) = config'
 
     countsLen' = (bucketCount' + 1) * floor (subBucketCount' / 2)
 
-indexForValue :: (Integral a, FiniteBits a) => HistogramConfig a -> a -> Int
-indexForValue h val = countsIndex h i sub
-  where
-    i = bucketIndex h val
-    sub = subBucketIndex h val i
+data Index = Index Int Int
 
-bucketIndex :: (Integral a, FiniteBits a) => HistogramConfig a -> a -> Int
-bucketIndex h a = m - (subBucketHalfCountMagnitude h + 1)
-  where
-    m :: Int
-    m = fromIntegral $ bitLength (a .|. subBucketMask h) - fromIntegral (unitMagnitude h)
+bucket :: Index -> Int
+bucket (Index b _) = b
 
-subBucketIndex :: forall a. (Integral a, FiniteBits a) => HistogramConfig a -> a -> Int -> Int
-subBucketIndex h v i = fromIntegral $ v `shiftR` toShift
-  where
-    toShift :: Int
-    toShift = i + fromIntegral (unitMagnitude h)
+subBucket :: Index -> Int
+subBucket (Index _ s) = s
 
-countsIndex :: HistogramConfig a -> Int -> Int -> Int
-countsIndex h bucketIdx subBucketIdx = sub + bucket
+asInt :: HistogramConfig a -> Index -> Int
+asInt c (Index bucket sub) = sub' + bucket'
   where
-    sub = subBucketIdx - subBucketHalfCount h
-    bucket = (bucketIdx + 1) `shift` subBucketHalfCountMagnitude h
+    sub' = sub - subBucketHalfCount c
+    bucket' = (bucket + 1) `shift` subBucketHalfCountMagnitude c
 
-valueFromSubBucket :: (Integral a, Bits a) => HistogramConfig a -> Int -> Int -> Range a
-valueFromSubBucket h bucketIndex' subBucketIndex' = Range lower' upper'
+
+fromInt :: HistogramConfig a -> Int -> Index
+fromInt c i = if bucket' < 0
+              then Index 0 (sub' - subBucketHalfCount c)
+              else Index bucket' sub'
   where
-    toShift = bucketIndex' + fromIntegral (unitMagnitude h)
-    lower' = fromIntegral $ subBucketIndex' `shift` toShift
+    bucket' = (i `shiftR` subBucketHalfCountMagnitude c) - 1
+    sub' = i .&. (subBucketHalfCount c - 1) + subBucketHalfCount c
+
+
+asIndex :: (Integral a, FiniteBits a) => HistogramConfig a -> a -> Index
+asIndex c a = Index bucket' sub
+  where
+    bucket' = m - (subBucketHalfCountMagnitude c + 1)
+      where
+        m :: Int
+        m = fromIntegral $ bitLength (a .|. subBucketMask c) - fromIntegral (unitMagnitude c)
+
+    sub = fromIntegral $ a `shiftR` toShift
+      where
+        toShift :: Int
+        toShift = bucket' + fromIntegral (unitMagnitude c)
+
+fromIndex :: (Integral a, Bits a) => HistogramConfig a -> Index -> Range a
+fromIndex c (Index bucket' sub) = Range lower' upper'
+  where
+    toShift = bucket' + fromIntegral (unitMagnitude c)
+    lower' = fromIntegral $ sub `shift` toShift
     range = 1 `shift` toShift
     upper' = (lower' + range) - 1
-
-
-valueAtIndex :: (Integral a, Bits a) => HistogramConfig a -> Int -> Range a
-valueAtIndex h i = if bucketIndex' < 0
-                   then valueFromSubBucket h 0 (subBucketIndex' - subBucketHalfCount h)
-                   else valueFromSubBucket h bucketIndex' subBucketIndex'
-  where
-    bucketIndex' = (i `shiftR` subBucketHalfCountMagnitude h) - 1
-    subBucketIndex' = i .&. (subBucketHalfCount h - 1) + subBucketHalfCount h
 
 bitLength :: FiniteBits b => b -> Int
 bitLength b = finiteBitSize b - countLeadingZeros b
