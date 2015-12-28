@@ -16,8 +16,11 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     Data.HdrHistogram
-  build-depends:       base >= 4.7 && < 5,
-                       vector >= 0.10 && < 0.11
+                       Data.HdrHistogram.Config
+  build-depends:       base >= 4.7 && < 5
+                     , vector >= 0.10 && < 0.11
+                     , QuickCheck
+
   default-language:    Haskell2010
 
 test-suite hdr-histogram-test
