@@ -120,9 +120,9 @@ indexForValue h val = countsIndex h i sub
     sub = subBucketIndex h val i
 
 bucketIndex :: (Integral a, FiniteBits a) => HistogramConfig a -> a -> Int
-bucketIndex h a = fromIntegral $ m - fromIntegral (subBucketHalfCountMagnitude h + 1)
+bucketIndex h a = m - (subBucketHalfCountMagnitude h + 1)
   where
-    m :: Int64
+    m :: Int
     m = fromIntegral $ bitLength (a .|. subBucketMask h) - fromIntegral (unitMagnitude h)
 
 subBucketIndex :: forall a. (Integral a, FiniteBits a) => HistogramConfig a -> a -> Int -> Int
