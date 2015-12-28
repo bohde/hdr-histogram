@@ -54,9 +54,8 @@ typeSpec = SpecType $ do
     upper val' `shouldBeGreaterThanOrEqual` lowest config'
     lower val' `shouldBeLessThanOrEqual` lowest config'
 
-  -- This test fails, but I'm not sure if under normal operations it matters
   prop "highest index should contain the highest value" $ \(config' :: HistogramConfig a) -> do
-    pending
+    pendingWith "Unsure this property should hold"
     let
       val' = fromIndex config' $ fromInt config' (countsLen config' - 1)
     upper val' `shouldBeGreaterThanOrEqual` highest config'
