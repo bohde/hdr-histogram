@@ -53,7 +53,7 @@ upper (Range _ a) = a
 lower :: Range a -> a
 lower (Range a _) = a
 
-config :: forall a. (Bounded a, Integral a, Bits a) => a -> a -> SignificantFigures -> HistogramConfig a
+config :: forall a. (Integral a, Bits a) => a -> a -> SignificantFigures -> HistogramConfig a
 config lowest' highest' s@(SignificantFigures sigfigs) = config'
   where
     config' = HistogramConfig {
@@ -87,13 +87,13 @@ config lowest' highest' s@(SignificantFigures sigfigs) = config'
     subBucketCount' :: Double
     subBucketCount' = 2 ** fromIntegral (subBucketHalfCountMagnitude' + 1)
 
-    effectiveHighest :: a
-    effectiveHighest = min highest' (maxBound `shiftR` 1)
-
     bucketCount' :: Int
-    bucketCount' = 1 + length (takeWhile (< effectiveHighest) $ iterate (`shift` 1) (max smallestUntrackable 1))
+    bucketCount' = 1 + length (takeWhile (< effectiveHighest) $ iterate (`shift` 1) smallestUntrackable)
       where
-        smallestUntrackable :: a
+        effectiveHighest :: Integer
+        effectiveHighest = fromIntegral highest'
+
+        smallestUntrackable :: Integer
         smallestUntrackable = floor subBucketCount' `shift` toInt unitMagnitude'
 
     countsLen' = (bucketCount' + 1) * floor (subBucketCount' / 2)
