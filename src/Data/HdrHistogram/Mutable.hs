@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric #-}
 module Data.HdrHistogram.Mutable (
   HistogramConfig, config,
   Histogram(..), histogram, record, recordValues,
@@ -5,6 +6,7 @@ module Data.HdrHistogram.Mutable (
   SignificantFigures, significantFigures
   ) where
 
+import           Control.DeepSeq             (NFData, deepseq, rnf)
 import           Control.Monad.Primitive     (PrimMonad, PrimState)
 import           Data.Bits                   (FiniteBits)
 import qualified Data.HdrHistogram           as H
@@ -13,12 +15,16 @@ import           Data.Primitive.MutVar       (MutVar, modifyMutVar', newMutVar,
                                               readMutVar)
 import qualified Data.Vector.Unboxed         as U
 import qualified Data.Vector.Unboxed.Mutable as MU
+import           GHC.Generics                (Generic)
 
 data Histogram s a b = Histogram {
   _config    :: HistogramConfig a,
   totalCount :: MutVar s b,
   counts     :: U.MVector s b
-}
+} deriving (Generic)
+
+instance (NFData a, NFData b) => NFData (Histogram s a b) where
+  rnf (Histogram c _ vec) = deepseq c $ deepseq vec ()
 
 histogram :: (PrimMonad m, U.Unbox b, Integral b) => HistogramConfig a -> m (Histogram (PrimState m) a b)
 histogram config' = do

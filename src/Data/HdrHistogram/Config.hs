@@ -1,4 +1,6 @@
-{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE DeriveGeneric              #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables        #-}
 module Data.HdrHistogram.Config (
   SignificantFigures,
   significantFigures,
@@ -10,13 +12,15 @@ module Data.HdrHistogram.Config (
   bitLength
   ) where
 
+import           Control.DeepSeq (NFData)
 import           Data.Bits       (Bits, FiniteBits, bitSizeMaybe,
                                   countLeadingZeros, finiteBitSize, shift,
                                   shiftR, (.&.), (.|.))
+import           GHC.Generics    (Generic)
 import           Test.QuickCheck (Arbitrary (..), Large (..), Positive (..),
                                   elements, getLarge, suchThat)
 
-newtype SignificantFigures = SignificantFigures Int deriving (Eq, Show)
+newtype SignificantFigures = SignificantFigures Int deriving (Eq, Show, NFData)
 
 significantFigures :: Int -> Either String SignificantFigures
 significantFigures i = case (i > 0  && i < 6) of
@@ -38,7 +42,9 @@ data HistogramConfig a = HistogramConfig {
    subBucketCount              :: !Int,
    bucketCount                 :: !Int,
    countsLen                   :: !Int
-   } deriving (Eq, Show)
+   } deriving (Eq, Show, Generic)
+
+instance (NFData a) => NFData (HistogramConfig a)
 
 instance (Arbitrary a, Bounded a, Integral a, Bits a) => Arbitrary (HistogramConfig a) where
   arbitrary = do
