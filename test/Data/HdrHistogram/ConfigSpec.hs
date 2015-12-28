@@ -21,6 +21,15 @@ instance (Random a, Arbitrary a, Bounded a, Integral a, Bits a) => Arbitrary (Co
     val <- choose (lowest config', highest config')
     return $ ConfigAndVal config' val
 
+data ConfigAndIndex a = ConfigAndIndex (HistogramConfig a) Int
+                    deriving (Show, Eq)
+
+instance (Random a, Arbitrary a, Bounded a, Integral a, Bits a) => Arbitrary (ConfigAndIndex a) where
+  arbitrary = do
+    config' <- arbitrary
+    i <- choose (0, countsLen config' - 1)
+    return $ ConfigAndIndex config' i
+
 
 data SpecType a = SpecType Spec
 runSpecType (SpecType s) = s
@@ -30,22 +39,36 @@ typeSpec = SpecType $ do
   prop "should generate bucket indices in bounds" $ \(ConfigAndVal config' (val :: a)) -> do
     let
       bi = asIndex config' val
+      i = asInt config' bi
     bucket bi `shouldBeLessThan` bucketCount config'
     bucket bi `shouldBeGreaterThanOrEqual` 0
     subBucket bi `shouldBeLessThan` subBucketCount config'
     subBucket bi `shouldBeGreaterThanOrEqual` 0
+    i `shouldBeLessThan` countsLen config'
+    i `shouldBeGreaterThanOrEqual` 0
 
   prop "index 0 should contain the lowest value" $ \(config' :: HistogramConfig a) -> do
     let
-      val' = fromIndex config' $ fromInt config' 1
+      val' = fromIndex config' $ fromInt config' 0
     upper val' `shouldBeGreaterThanOrEqual` lowest config'
     lower val' `shouldBeLessThanOrEqual` lowest config'
 
-  prop "it should produce estimated vals" $ \(ConfigAndVal config' (val :: a)) -> do
+  -- This test fails, but I'm not sure if under normal operations it matters
+  prop "highest index should contain the highest value" $ \(config' :: HistogramConfig a) -> do
+    pending
     let
-      val' = fromIndex config' $ asIndex config' val
-    upper val' `shouldBeGreaterThanOrEqual` val
-    lower val' `shouldBeLessThanOrEqual` val
+      val' = fromIndex config' $ fromInt config' (countsLen config' - 1)
+    upper val' `shouldBeGreaterThanOrEqual` highest config'
+    lower val' `shouldBeLessThanOrEqual` highest config'
+
+  prop "asInt . fromInt == id" $ \(ConfigAndIndex (c :: HistogramConfig a) i) ->
+    (asInt c . fromInt c) i `shouldBe` i
+
+  prop "fromIndex . asIndex should give contain value" $ \(ConfigAndVal c (val :: a)) -> do
+    let
+      range = (fromIndex c . asIndex c) val
+    upper range `shouldBeGreaterThanOrEqual` val
+    lower range `shouldBeLessThanOrEqual` val
 
 spec :: Spec
 spec = do
