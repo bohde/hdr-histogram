@@ -107,7 +107,7 @@ subBucketIndex h v i = fromIntegral $ v `shiftR` fromIntegral toShift
     toShift = fromIntegral i + unitMagnitude h
 
 countsIndex :: Histogram a b -> Int -> Int -> Int
-countsIndex h bucketIdx subBucketIdx = subBucketIdx - subBucketHalfCount h + (bucketIdx + 1 `shift` subBucketHalfCountMagnitude h)
+countsIndex h bucketIdx subBucketIdx = (subBucketIdx - subBucketHalfCount h) + ((bucketIdx + 1) `shift` subBucketHalfCountMagnitude h)
 
 recordCorrectedValues :: Integral a => Histogram a b -> a -> a -> Histogram a b
 recordCorrectedValues = undefined
@@ -119,7 +119,7 @@ percentile h q = case U.find ((>= count) . snd) totals of
   where
     q' = min q 100
     count = floor $ (q' / 100) * fromIntegral (totalCount h) + 0.5
-    totals = U.scanr f (0 :: Int, 0) withIndex
+    totals = U.scanl f (0 :: Int, 0) withIndex
       where
         f (_, v') (i, v) = (i, v' + v)
         withIndex = U.imap (,) (counts h)

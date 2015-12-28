@@ -59,10 +59,11 @@ spec = do
         h = new min max sigfigs
       indexForValue h val `shouldBeLessThan` countsLen h
 
-    it "should be able to be constructed" $ do
+    it "should give equal result to reference" $ do
       let
         empty :: Either String (Histogram Int Int)
-        empty = new 0 10 <$> significantFigures 3
-        mark :: Histogram Int Int -> Int
-        mark h = (flip percentile) (90.0) $ foldr (flip record) h [1..10]
-      fmap mark empty `shouldBe` Right 9
+        empty = new 1 10 <$> significantFigures 1
+        mark :: Histogram Int Int -> Histogram Int Int
+        mark h = foldr (flip record) h [1..10]
+        h = fmap mark empty
+      fmap ((flip percentile) (90.0)) h `shouldBe` Right 9
