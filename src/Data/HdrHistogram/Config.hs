@@ -3,7 +3,7 @@ module Data.HdrHistogram.Config (
   SignificantFigures,
   significantFigures,
   HistogramConfig(..), config,
-  Range, upper,
+  Range, upper, lower,
   indexForValue, valueAtIndex, bucketIndex,
   bitLength
   ) where
@@ -11,7 +11,8 @@ module Data.HdrHistogram.Config (
 import           Data.Bits       (Bits, FiniteBits, countLeadingZeros,
                                   finiteBitSize, shift, shiftR, (.&.), (.|.))
 import           Data.Int        (Int64)
-import           Test.QuickCheck (Arbitrary (..), elements, suchThat)
+import           Test.QuickCheck (Arbitrary (..), Large (..), Positive (..),
+                                  elements, getLarge, suchThat)
 
 newtype SignificantFigures = SignificantFigures Int deriving (Eq, Show)
 
@@ -21,7 +22,7 @@ significantFigures i = case (i > 0  && i < 6) of
   False -> Left "HdrHistogram.significantFigures must be between 1 and 5"
 
 instance Arbitrary SignificantFigures where
-  arbitrary = fmap SignificantFigures $ elements [1..5]
+  arbitrary = SignificantFigures <$> elements [1..5]
   shrink (SignificantFigures a) = fmap SignificantFigures [1..(a - 1)]
 
 data HistogramConfig a = HistogramConfig {
@@ -37,12 +38,12 @@ data HistogramConfig a = HistogramConfig {
    countsLen                   :: !Int
    } deriving (Eq, Show)
 
-instance (Arbitrary a, Integral a, Bits a) => Arbitrary (HistogramConfig a) where
+instance (Arbitrary a, Bounded a, Integral a, Bits a) => Arbitrary (HistogramConfig a) where
   arbitrary = do
-    min <- arbitrary `suchThat` (>= 0)
-    max <- arbitrary `suchThat` (> min)
+    (Positive min') <- arbitrary
+    (Large max') <- arbitrary `suchThat` ((> min') . getLarge)
     s <- arbitrary
-    return $ config min max s
+    return $ config min' max' s
 
 data Range a = Range a a
 
@@ -52,7 +53,7 @@ upper (Range _ a) = a
 lower :: Range a -> a
 lower (Range a _) = a
 
-config :: (Integral a, Bits a) => a -> a -> SignificantFigures -> HistogramConfig a
+config :: forall a. (Bounded a, Integral a, Bits a) => a -> a -> SignificantFigures -> HistogramConfig a
 config lowest' highest' s@(SignificantFigures sigfigs) = config'
   where
     config' = HistogramConfig {
@@ -68,10 +69,10 @@ config lowest' highest' s@(SignificantFigures sigfigs) = config'
       countsLen                   = countsLen'
       }
 
-    toDouble :: (Real a) => a -> Double
+    toDouble :: (Real b) => b -> Double
     toDouble = fromRational . toRational
 
-    toInt :: (Integral a) => a -> Int
+    toInt :: (Integral b) => b -> Int
     toInt = fromInteger . toInteger
 
     unitMagnitude' = fromInteger $ floor $ max 0 m
@@ -84,15 +85,20 @@ config lowest' highest' s@(SignificantFigures sigfigs) = config'
         m = (ceiling . logBase 2 . (* 2) . (10 **) . toDouble) sigfigs
 
     subBucketCount' :: Double
-    subBucketCount' = 2 ** (fromIntegral $ subBucketHalfCountMagnitude' + 1)
+    subBucketCount' = 2 ** fromIntegral (subBucketHalfCountMagnitude' + 1)
+
+    effectiveHighest :: a
+    effectiveHighest = min highest' (maxBound `shiftR` 1)
 
     bucketCount' :: Int
-    bucketCount' = 1 + (length $ takeWhile (<= highest') $ iterate (`shift` 1) smallestUntrackable)
+    bucketCount' = 1 + length (takeWhile (< effectiveHighest) $ iterate (`shift` 1) (max smallestUntrackable 1))
       where
-        smallestUntrackable = (floor subBucketCount') `shift` toInt unitMagnitude'
+        smallestUntrackable :: a
+        smallestUntrackable = floor subBucketCount' `shift` toInt unitMagnitude'
 
     countsLen' = (bucketCount' + 1) * floor (subBucketCount' / 2)
 
+indexForValue :: (Integral a, FiniteBits a) => HistogramConfig a -> a -> Int
 indexForValue h val = countsIndex h i sub
   where
     i = bucketIndex h val
@@ -102,9 +108,9 @@ bucketIndex :: (Integral a, FiniteBits a) => HistogramConfig a -> a -> Int
 bucketIndex h a = fromIntegral $ m - fromIntegral (subBucketHalfCountMagnitude h + 1)
   where
     m :: Int64
-    m = fromIntegral $ (bitLength (a .|. subBucketMask h)) - fromIntegral (unitMagnitude h)
+    m = fromIntegral $ bitLength (a .|. subBucketMask h) - fromIntegral (unitMagnitude h)
 
-subBucketIndex :: forall a b. (Integral a, FiniteBits a) => HistogramConfig a -> a -> Int -> Int
+subBucketIndex :: forall a. (Integral a, FiniteBits a) => HistogramConfig a -> a -> Int -> Int
 subBucketIndex h v i = fromIntegral $ v `shiftR` fromIntegral toShift
   where
     toShift :: a
@@ -113,22 +119,22 @@ subBucketIndex h v i = fromIntegral $ v `shiftR` fromIntegral toShift
 countsIndex :: HistogramConfig a -> Int -> Int -> Int
 countsIndex h bucketIdx subBucketIdx = (subBucketIdx - subBucketHalfCount h) + ((bucketIdx + 1) `shift` subBucketHalfCountMagnitude h)
 
-valueFromSubBucket :: (Integral b, Integral a, Bits a) => HistogramConfig a -> Int -> Int -> Range a
-valueFromSubBucket h bucketIndex subBucketIndex = Range lower upper
+valueFromSubBucket :: (Integral a, Bits a) => HistogramConfig a -> Int -> Int -> Range a
+valueFromSubBucket h bucketIndex' subBucketIndex' = Range lower' upper'
   where
-    toShift = (bucketIndex + (fromIntegral $ unitMagnitude h))
-    lower = fromIntegral $ subBucketIndex `shift` toShift
+    toShift = bucketIndex' + fromIntegral (unitMagnitude h)
+    lower' = fromIntegral $ subBucketIndex' `shift` toShift
     range = 1 `shift` toShift
-    upper = (lower + range) - 1
+    upper' = (lower' + range) - 1
 
 
 valueAtIndex :: (Integral a, Bits a) => HistogramConfig a -> Int -> Range a
-valueAtIndex h i = if bucketIndex < 0
-                   then valueFromSubBucket h 0 (subBucketIndex - subBucketHalfCount h)
-                   else valueFromSubBucket h bucketIndex subBucketIndex
+valueAtIndex h i = if bucketIndex' < 0
+                   then valueFromSubBucket h 0 (subBucketIndex' - subBucketHalfCount h)
+                   else valueFromSubBucket h bucketIndex' subBucketIndex'
   where
-    bucketIndex = (i `shiftR` subBucketHalfCountMagnitude h) - 1
-    subBucketIndex = i .&. (subBucketHalfCount h - 1) + subBucketHalfCount h
+    bucketIndex' = (i `shiftR` subBucketHalfCountMagnitude h) - 1
+    subBucketIndex' = i .&. (subBucketHalfCount h - 1) + subBucketHalfCount h
 
 bitLength :: FiniteBits b => b -> Int
 bitLength b = finiteBitSize b - countLeadingZeros b

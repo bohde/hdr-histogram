@@ -3,9 +3,7 @@ module Data.HdrHistogram (
   Histogram, histogram, record, percentile, config, significantFigures
   ) where
 
-import           Data.Bits                (Bits, FiniteBits, countLeadingZeros,
-                                           finiteBitSize, shift, shiftR, (.&.),
-                                           (.|.))
+import           Data.Bits                (Bits, FiniteBits)
 import           Data.HdrHistogram.Config
 import           Data.Vector.Unboxed      ((!), (//))
 import qualified Data.Vector.Unboxed      as U
@@ -19,18 +17,16 @@ data Histogram a b = Histogram {
 
 
 histogram :: (U.Unbox b, Integral b) => HistogramConfig a -> Histogram a b
-histogram config = Histogram {
-  _config = config,
+histogram config' = Histogram {
+  _config = config',
   totalCount = 0,
-  counts = U.replicate (countsLen config) 0
+  counts = U.replicate (countsLen config') 0
   }
 
 
-merge :: Histogram a b -> Histogram a b -> Histogram a b
-merge = undefined
-
 record :: (U.Unbox b, Integral b, Integral a, FiniteBits a) => Histogram a b -> a -> Histogram a b
 record h val = recordValues h val 1
+
 
 recordValues :: (U.Unbox b, Integral b, Integral a, FiniteBits a) => Histogram a b -> a -> b -> Histogram a b
 recordValues h val count = h {
@@ -40,6 +36,9 @@ recordValues h val count = h {
   where
     index = indexForValue (_config h) val
 
+
+merge :: Histogram a b -> Histogram a b -> Histogram a b
+merge = undefined
 
 recordCorrectedValues :: Integral a => Histogram a b -> a -> a -> Histogram a b
 recordCorrectedValues = undefined
