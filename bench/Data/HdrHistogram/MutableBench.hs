@@ -1,8 +1,6 @@
-{-# LANGUAGE KindSignatures #-}
-{-# LANGUAGE RankNTypes     #-}
 module Data.HdrHistogram.MutableBench (benchmarks) where
 
-import           Control.Monad             (replicateM_)
+import           Control.Monad             (forM_)
 import           Control.Monad.Primitive   (PrimMonad, PrimState)
 import           Criterion.Main
 import           Data.HdrHistogram.Config
@@ -20,20 +18,20 @@ new :: PrimMonad m => m (MH.Histogram (PrimState m) Int Int)
 new = do
   MH.histogram config'
 
-insert :: PrimMonad m => Int -> (MH.Histogram (PrimState m) Int Int) -> m (MH.Histogram (PrimState m) Int Int)
-insert r h = do
-  replicateM_ r $ do
-    MH.record h 12000
+insertRange :: PrimMonad m => Int -> (MH.Histogram (PrimState m) Int Int) -> m (MH.Histogram (PrimState m) Int Int)
+insertRange r h = do
+  forM_ [1..r] $ \i -> do
+    MH.record h i
   return h
 
 benchmarks :: [Benchmark]
 benchmarks = [
   env new $ \ ~h ->
     bgroup "insert" [
-      bench "1" $ nfIO (MH.record h 12000 >> return h),
-      bench "10" $ nfIO (insert 10 h),
-      bench "100" $ nfIO (insert 100 h),
-      bench "1000" $ nfIO (insert 1000 h),
-      bench "10000" $ nfIO (insert 10000 h)
+       bench "1" $ nfIO (MH.record h 12000 >> return h),
+       bench "10" $ nfIO (insertRange 10 h),
+       bench "100" $ nfIO (insertRange 100 h),
+       bench "1000" $ nfIO (insertRange 1000 h),
+       bench "10000" $ nfIO (insertRange 10000 h)
       ]
   ]
