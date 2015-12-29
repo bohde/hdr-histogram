@@ -51,7 +51,7 @@ data HistogramConfig a = HistogramConfig {
    subBucketCount              :: !Int,
    -- | the total number of buckets
    bucketCount                 :: !Int,
-   -- | the total number of elements accounting for buckets and their sub buckets
+   -- | the total number of elements distinct indices
    size                        :: !Int
    } deriving (Eq, Show, Generic)
 
@@ -95,7 +95,7 @@ config lowest' highest' s@(SignificantFigures sigfigs) = config'
       subBucketMask               = floor (subBucketCount' - 1) `shift` unitMagnitude',
       subBucketCount              = floor subBucketCount',
       bucketCount                 = bucketCount',
-      size                   = size'
+      size                        = size'
       }
 
     toDouble :: (Real b) => b -> Double
@@ -154,7 +154,6 @@ fromInt c i = if bucket' < 0
 
 
 {-# INLINEABLE asIndex #-}
--- | Calculate the internal
 asIndex :: (Integral a, FiniteBits a) => HistogramConfig a -> a -> Index
 asIndex c a = Index bucket' sub
   where

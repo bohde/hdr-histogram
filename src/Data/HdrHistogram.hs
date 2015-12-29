@@ -1,7 +1,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Data.HdrHistogram (
-  HistogramConfig, config,
   Histogram(..), histogram, record, percentile,
+  HistogramConfig, config,
   SignificantFigures, significantFigures
   ) where
 
@@ -10,14 +10,14 @@ import           Data.HdrHistogram.Config
 import           Data.Vector.Unboxed      ((!), (//))
 import qualified Data.Vector.Unboxed      as U
 
-
+-- | A pure 'Histogram'
 data Histogram a b = Histogram {
   _config    :: HistogramConfig a,
   totalCount :: b,
   counts     :: U.Vector b
 } deriving (Eq, Show)
 
-
+-- | Construct a 'Histogram' from the given 'HistogramConfig'
 histogram :: (U.Unbox b, Integral b) => HistogramConfig a -> Histogram a b
 histogram config' = Histogram {
   _config = config',
@@ -26,10 +26,11 @@ histogram config' = Histogram {
   }
 
 
+-- | Record a single value to the 'Histogram'
 record :: (U.Unbox b, Integral b, Integral a, FiniteBits a) => Histogram a b -> a -> Histogram a b
 record h val = recordValues h val 1
 
-
+-- | Record a multiple instances of a value value to the 'Histogram'
 recordValues :: (U.Unbox b, Integral b, Integral a, FiniteBits a) => Histogram a b -> a -> b -> Histogram a b
 recordValues h val count = h {
     totalCount = totalCount h + count,
@@ -46,7 +47,11 @@ recordValues h val count = h {
 -- recordCorrectedValues :: Integral a => Histogram a b -> a -> a -> Histogram a b
 -- recordCorrectedValues = undefined
 
-percentile :: (Integral a, Integral b, U.Unbox b, Bits a) => Histogram a b -> Float -> Range a
+-- | Calculate the 'Range' of values at the given percentile
+percentile :: (Integral a, Integral b, U.Unbox b, Bits a)
+             => Histogram a b
+             -> Float -- ^ The percentile in the range 0 to 100
+             -> Range a
 percentile h q = case U.find ((>= count) . snd) totals of
   Nothing -> Range 0 0
   Just (i, _) -> rangeForIndex c i
