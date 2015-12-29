@@ -2,13 +2,14 @@ name:                hdr-histogram
 version:             0.1.0.0
 synopsis:            Haskell implementation of High Dynamic Range (HDR) Histograms
 description:         Please see README.md
-homepage:            http://github.com/githubuser/hdr-histogram#readme
+homepage:            http://github.com/joshbohde/hdr-histogram#readme
+bug-reports:         http://github.com/joshbohde/hdr-histogram/issues
 license:             GPL-3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2010 Author Here
-category:            Web
+author:              Josh Bohde <josh@joshbohde.com>
+maintainer:          Josh Bohde <josh@joshbohde.com>
+copyright:           2015 Josh Bohde
+category:            Math, Statistics
 build-type:          Simple
 -- extra-source-files:
 cabal-version:       >=1.10
@@ -24,7 +25,7 @@ library
                      , deepseq >= 1.4 && < 1.5
                      , QuickCheck
   default-language:    Haskell2010
-  ghc-options:         -Wall
+  ghc-options:         -Wall -O2
 
 test-suite hdr-histogram-test
   type:                exitcode-stdio-1.0
@@ -70,4 +71,4 @@ benchmark hdr-histogram-bench
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/hdr-histogram
+  location: https://github.com/joshbohde/hdr-histogram
