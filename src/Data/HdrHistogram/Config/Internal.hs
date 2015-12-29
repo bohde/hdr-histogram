@@ -76,7 +76,7 @@ instance (Arbitrary a, Bounded a, Integral a, Bits a) => Arbitrary (HistogramCon
 data Range a = Range {
   lower :: a,
   upper :: a
-  }
+  } deriving (Show, Eq)
 
 -- | smart constructor for 'HistogramConfig'
 config :: forall a. (Integral a, Bits a)
