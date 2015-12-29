@@ -32,13 +32,13 @@ instance Arbitrary SignificantFigures where
   shrink (SignificantFigures a) = fmap SignificantFigures [1..(a - 1)]
 
 data HistogramConfig a = HistogramConfig {
-   lowest                      :: a,
-   highest                     :: a,
-   sigFigures                  :: SignificantFigures,
-   unitMagnitude               :: a,
+   lowest                      :: !a,
+   highest                     :: !a,
+   sigFigures                  :: !SignificantFigures,
+   unitMagnitude               :: !Int,
    subBucketHalfCountMagnitude :: !Int,
    subBucketHalfCount          :: !Int,
-   subBucketMask               :: a,
+   subBucketMask               :: !a,
    subBucketCount              :: !Int,
    bucketCount                 :: !Int,
    countsLen                   :: !Int
@@ -79,7 +79,7 @@ config lowest' highest' s@(SignificantFigures sigfigs) = config'
       unitMagnitude = unitMagnitude',
       subBucketHalfCountMagnitude = subBucketHalfCountMagnitude',
       subBucketHalfCount          = floor $ subBucketCount' / 2,
-      subBucketMask               = floor (subBucketCount' - 1) `shift` toInt unitMagnitude',
+      subBucketMask               = floor (subBucketCount' - 1) `shift` unitMagnitude',
       subBucketCount              = floor subBucketCount',
       bucketCount                 = bucketCount',
       countsLen                   = countsLen'
@@ -87,9 +87,6 @@ config lowest' highest' s@(SignificantFigures sigfigs) = config'
 
     toDouble :: (Real b) => b -> Double
     toDouble = fromRational . toRational
-
-    toInt :: (Integral b) => b -> Int
-    toInt = fromInteger . toInteger
 
     unitMagnitude' = fromInteger $ floor $ max 0 m
       where
@@ -103,7 +100,7 @@ config lowest' highest' s@(SignificantFigures sigfigs) = config'
           Nothing -> desiredMagnitude
           Just i ->  min possibleMagnitude desiredMagnitude
             where
-              possibleMagnitude = i - 1 - fromIntegral unitMagnitude'
+              possibleMagnitude = i - 1 - unitMagnitude'
 
 
     subBucketCount' :: Double
@@ -116,7 +113,7 @@ config lowest' highest' s@(SignificantFigures sigfigs) = config'
         effectiveHighest = fromIntegral highest'
 
         smallestUntrackable :: Integer
-        smallestUntrackable = floor subBucketCount' `shift` toInt unitMagnitude'
+        smallestUntrackable = floor subBucketCount' `shift` unitMagnitude'
 
     countsLen' = (bucketCount' + 1) * floor (subBucketCount' / 2)
 
@@ -148,22 +145,24 @@ fromInt c i = if bucket' < 0
 asIndex :: (Integral a, FiniteBits a) => HistogramConfig a -> a -> Index
 asIndex c = go
   where
+    magnitude :: Int
+    magnitude = unitMagnitude c
     go a = Index bucket' sub
       where
         bucket' = m - (subBucketHalfCountMagnitude c + 1)
           where
             m :: Int
-            m = fromIntegral $ bitLength (a .|. subBucketMask c) - fromIntegral (unitMagnitude c)
+            m = bitLength (a .|. subBucketMask c) - magnitude
 
         sub = fromIntegral $ a `shiftR` toShift
           where
             toShift :: Int
-            toShift = bucket' + fromIntegral (unitMagnitude c)
+            toShift = bucket' + magnitude
 
 fromIndex :: (Integral a, Bits a) => HistogramConfig a -> Index -> Range a
 fromIndex c (Index bucket' sub) = Range lower' upper'
   where
-    toShift = bucket' + fromIntegral (unitMagnitude c)
+    toShift = bucket' + unitMagnitude c
     lower' = fromIntegral $ sub `shift` toShift
     range = 1 `shift` toShift
     upper' = (lower' + range) - 1
