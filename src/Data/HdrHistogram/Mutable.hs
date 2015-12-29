@@ -28,7 +28,7 @@ instance (NFData a, NFData b) => NFData (Histogram s a b) where
 
 histogram :: (PrimMonad m, U.Unbox b, Integral b) => HistogramConfig a -> m (Histogram (PrimState m) a b)
 histogram config' = do
-  vect <- MU.replicate (countsLen config') 0
+  vect <- MU.replicate (size config') 0
   totals <- newMutVar 0
   return Histogram {
   _config = config',

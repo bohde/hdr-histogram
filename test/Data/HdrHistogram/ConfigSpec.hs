@@ -26,7 +26,7 @@ data ConfigAndIndex a = ConfigAndIndex (HistogramConfig a) Int
 instance (Random a, Arbitrary a, Bounded a, Integral a, Bits a) => Arbitrary (ConfigAndIndex a) where
   arbitrary = do
     config' <- arbitrary
-    i <- choose (0, countsLen config' - 1)
+    i <- choose (0, size config' - 1)
     return $ ConfigAndIndex config' i
 
 
@@ -45,7 +45,7 @@ typeSpec = SpecType $ do
     bucket bi `shouldBeGreaterThanOrEqual` 0
     subBucket bi `shouldBeLessThan` subBucketCount config'
     subBucket bi `shouldBeGreaterThanOrEqual` 0
-    i `shouldBeLessThan` countsLen config'
+    i `shouldBeLessThan` size config'
     i `shouldBeGreaterThanOrEqual` 0
 
   prop "index 0 should contain the lowest value" $ \(config' :: HistogramConfig a) -> do
@@ -57,7 +57,7 @@ typeSpec = SpecType $ do
   prop "highest index should contain the highest value" $ \(config' :: HistogramConfig a) -> do
     pendingWith "Unsure this property should hold"
     let
-      val' = fromIndex config' $ fromInt config' (countsLen config' - 1)
+      val' = fromIndex config' $ fromInt config' (size config' - 1)
     upper val' `shouldBeGreaterThanOrEqual` highest config'
     lower val' `shouldBeLessThanOrEqual` highest config'
 

@@ -22,7 +22,7 @@ histogram :: (U.Unbox b, Integral b) => HistogramConfig a -> Histogram a b
 histogram config' = Histogram {
   _config = config',
   totalCount = 0,
-  counts = U.replicate (countsLen config') 0
+  counts = U.replicate (size config') 0
   }
 
 
