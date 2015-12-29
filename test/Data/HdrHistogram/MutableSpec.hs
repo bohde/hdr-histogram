@@ -13,7 +13,7 @@ import           Test.Utils
 
 spec :: Spec
 spec =
-  describe "Histogram" $ do
+  describe "Histogram" $
     prop "should be close to reference implementation" $ \(ConfigAndVals c (vals :: [Int])) -> do
       let
         v = U.fromList vals

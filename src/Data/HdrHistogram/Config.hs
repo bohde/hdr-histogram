@@ -23,9 +23,9 @@ import           Test.QuickCheck (Arbitrary (..), Large (..), Positive (..),
 newtype SignificantFigures = SignificantFigures Int deriving (Eq, Show, NFData)
 
 significantFigures :: Int -> Either String SignificantFigures
-significantFigures i = case (i > 0  && i < 6) of
-  True -> Right $ SignificantFigures i
-  False -> Left "HdrHistogram.significantFigures must be between 1 and 5"
+significantFigures i = if i > 0  && i < 6
+  then Right $ SignificantFigures i
+  else Left "HdrHistogram.significantFigures must be between 1 and 5"
 
 instance Arbitrary SignificantFigures where
   arbitrary = SignificantFigures <$> elements [1..5]

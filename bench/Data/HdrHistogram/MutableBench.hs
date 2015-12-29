@@ -15,18 +15,16 @@ config' :: HistogramConfig Int
 config' = config (1 :: Int) 3600000000 fig
 
 new :: PrimMonad m => m (MH.Histogram (PrimState m) Int Int)
-new = do
-  MH.histogram config'
+new = MH.histogram config'
 
-insertRange :: PrimMonad m => Int -> (MH.Histogram (PrimState m) Int Int) -> m (MH.Histogram (PrimState m) Int Int)
+insertRange :: PrimMonad m => Int -> MH.Histogram (PrimState m) Int Int -> m (MH.Histogram (PrimState m) Int Int)
 insertRange r h = do
-  forM_ [1..r] $ \i -> do
-    MH.record h i
+  forM_ [1..r] $ MH.record h
   return h
 
 benchmarks :: [Benchmark]
 benchmarks = [
-  env new $ \ ~h ->
+  env new $ \h ->
     bgroup "insert" [
        bench "1" $ nfIO (MH.record h 12000 >> return h),
        bench "10" $ nfIO (insertRange 10 h),
