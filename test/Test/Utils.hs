@@ -1,14 +1,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Test.Utils where
 
-import           Control.Monad.ST             (runST)
-import           Data.Bits                    (Bits)
+import           Control.Monad.ST                  (runST)
+import           Data.Bits                         (Bits)
 import           Data.HdrHistogram
-import           Data.HdrHistogram.Config
-import           Data.Vector                  ((!))
-import qualified Data.Vector                  as U
-import           Data.Vector.Algorithms.Intro (sort)
-import           System.Random                (Random)
+import           Data.HdrHistogram.Config.Internal
+import           Data.Vector                       ((!))
+import qualified Data.Vector                       as U
+import           Data.Vector.Algorithms.Intro      (sort)
+import           System.Random                     (Random)
 import           Test.QuickCheck
 
 data ConfigAndVals a = ConfigAndVals (HistogramConfig a) [a]

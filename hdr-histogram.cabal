@@ -18,6 +18,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Data.HdrHistogram
                        Data.HdrHistogram.Config
+                       Data.HdrHistogram.Config.Internal
                        Data.HdrHistogram.Mutable
   build-depends:       base >= 4.7 && < 5
                      , vector >= 0.10 && < 0.12

@@ -1,14 +1,14 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 module Data.HdrHistogram.ConfigSpec where
 
-import           Data.Bits                (Bits, FiniteBits)
-import           Data.HdrHistogram.Config
-import qualified Data.Int                 as Int
-import qualified Data.Word                as Word
-import           System.Random            (Random)
+import           Data.Bits                         (Bits, FiniteBits)
+import           Data.HdrHistogram.Config.Internal
+import qualified Data.Int                          as Int
+import qualified Data.Word                         as Word
+import           System.Random                     (Random)
 import           Test.Expectations
 import           Test.Hspec
-import           Test.Hspec.QuickCheck    (prop)
+import           Test.Hspec.QuickCheck             (prop)
 import           Test.QuickCheck
 
 data ConfigAndVal a = ConfigAndVal (HistogramConfig a) a

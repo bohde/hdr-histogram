@@ -46,10 +46,9 @@ recordValues :: (Integral a, Integral b, FiniteBits a, U.Unbox b, PrimMonad m) =
                Histogram (PrimState m) a b -> a -> b -> m ()
 recordValues h val count = do
   modifyMutVar' (totalCount h) (+ count)
-  modify (counts h) (+ count) (getIndex val)
+  modify (counts h) (+ count) (indexForValue c val)
   where
     c = _config h
-    getIndex = asInt c . asIndex c
     modify v f i = do
       a <- MU.unsafeRead v i
       MU.unsafeWrite v i (f a)
