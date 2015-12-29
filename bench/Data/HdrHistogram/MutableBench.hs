@@ -30,6 +30,7 @@ benchmarks :: [Benchmark]
 benchmarks = [
   env (new) $ \ ~h ->
     bgroup "insert" [
+      bench "1" $ nfIO (MH.record h 12000 >> return h),
       bench "10" $ nfIO (insert 10 h),
       bench "100" $ nfIO (insert 100 h),
       bench "1000" $ nfIO (insert 1000 h),
