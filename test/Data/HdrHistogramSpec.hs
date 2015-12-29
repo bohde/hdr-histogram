@@ -7,7 +7,6 @@ import qualified Data.Vector              as U
 import           Test.Expectations
 import           Test.Hspec
 import           Test.Hspec.QuickCheck    (prop)
-import           Test.QuickCheck
 import           Test.Utils
 
 spec :: Spec
