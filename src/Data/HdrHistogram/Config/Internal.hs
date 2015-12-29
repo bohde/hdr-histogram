@@ -72,6 +72,7 @@ instance (Arbitrary a, Bounded a, Integral a, Bits a) => Arbitrary (HistogramCon
         s <- shrink $ sigFigures c
         return $ config min' max' s
 
+-- | A range of values between 'lower' and 'upper'
 data Range a = Range {
   lower :: a,
   upper :: a

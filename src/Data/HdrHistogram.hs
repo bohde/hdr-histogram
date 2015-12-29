@@ -1,6 +1,27 @@
+{-|
+Module      : Data.HdrHistogram
+Copyright   : (c) Josh Bohde, 2015
+License     : GPL-3
+Maintainer  : josh@joshbohde.com
+Stability   : experimental
+Portability : POSIX
+
+A Haskell implementation of <http://www.hdrhistogram.org/ HdrHistogram>.
+It allows storing counts of observed values within a range,
+while maintaining precision to a configurable number of significant
+digits.
+
+-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Data.HdrHistogram (
-  Histogram(..), histogram, record, percentile,
+  -- * Histogram
+  Histogram(..), histogram,
+  -- * Writing
+  record, recordValues,
+  -- * Reading
+  Range(..),
+  percentile,
+  -- * Re-exports
   HistogramConfig, config,
   SignificantFigures, significantFigures
   ) where
@@ -11,14 +32,14 @@ import           Data.Vector.Unboxed      ((!), (//))
 import qualified Data.Vector.Unboxed      as U
 
 -- | A pure 'Histogram'
-data Histogram a b = Histogram {
-  _config    :: HistogramConfig a,
-  totalCount :: b,
-  counts     :: U.Vector b
+data Histogram value count = Histogram {
+  _config    :: HistogramConfig value,
+  totalCount :: count,
+  counts     :: U.Vector count
 } deriving (Eq, Show)
 
 -- | Construct a 'Histogram' from the given 'HistogramConfig'
-histogram :: (U.Unbox b, Integral b) => HistogramConfig a -> Histogram a b
+histogram :: (U.Unbox count, Integral count) => HistogramConfig value -> Histogram value count
 histogram config' = Histogram {
   _config = config',
   totalCount = 0,
@@ -27,11 +48,11 @@ histogram config' = Histogram {
 
 
 -- | Record a single value to the 'Histogram'
-record :: (U.Unbox b, Integral b, Integral a, FiniteBits a) => Histogram a b -> a -> Histogram a b
+record :: (U.Unbox count, Integral count, Integral value, FiniteBits value) => Histogram value count -> value -> Histogram value count
 record h val = recordValues h val 1
 
 -- | Record a multiple instances of a value value to the 'Histogram'
-recordValues :: (U.Unbox b, Integral b, Integral a, FiniteBits a) => Histogram a b -> a -> b -> Histogram a b
+recordValues :: (U.Unbox count, Integral count, Integral value, FiniteBits value) => Histogram value count -> value -> count -> Histogram value count
 recordValues h val count = h {
     totalCount = totalCount h + count,
     counts = counts h // [(index, (counts h ! index) + count)]
@@ -41,17 +62,17 @@ recordValues h val count = h {
     index = indexForValue c val
 
 
--- merge :: Histogram a b -> Histogram a b -> Histogram a b
+-- merge :: Histogram value count -> Histogram value count -> Histogram value count
 -- merge = undefined
 --
--- recordCorrectedValues :: Integral a => Histogram a b -> a -> a -> Histogram a b
+-- recordCorrectedValues :: Integral value => Histogram value count -> value -> value -> Histogram value count
 -- recordCorrectedValues = undefined
 
 -- | Calculate the 'Range' of values at the given percentile
-percentile :: (Integral a, Integral b, U.Unbox b, Bits a)
-             => Histogram a b
+percentile :: (Integral value, Integral count, U.Unbox count, Bits value)
+             => Histogram value count
              -> Float -- ^ The percentile in the range 0 to 100
-             -> Range a
+             -> Range value
 percentile h q = case U.find ((>= count) . snd) totals of
   Nothing -> Range 0 0
   Just (i, _) -> rangeForIndex c i

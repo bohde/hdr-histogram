@@ -3,7 +3,6 @@ module Data.HdrHistogram.MutableSpec where
 
 import           Control.Monad.ST          (runST)
 import           Data.HdrHistogram
-import           Data.HdrHistogram.Config
 import qualified Data.HdrHistogram.Mutable as MH
 import qualified Data.Vector               as U
 import           Test.Expectations

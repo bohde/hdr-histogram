@@ -1,12 +1,29 @@
+{-|
+Module      : Data.HdrHistogram.Config
+Copyright   : (c) Josh Bohde, 2015
+License     : GPL-3
+Maintainer  : josh@joshbohde.com
+Stability   : experimental
+Portability : POSIX
+
+A Haskell implementation of <http://www.hdrhistogram.org/ HdrHistogram>. It allows storing counts of observed values within a range,
+while maintaining precision to a configurable number of significant
+digits.
+
+This module captures the common functionality of converting values to
+and from 'Int' indices, regardless of mutability or memory layout.
+-}
 {-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE ScopedTypeVariables        #-}
 module Data.HdrHistogram.Config (
-  HistogramConfig, config, size,
+  -- * SignificantFigures
   SignificantFigures,
   significantFigures,
-  Range(..),
+  -- * HistogramConfig
+  HistogramConfig, config, size,
   indexForValue,
+  Range(..),
   rangeForIndex
   ) where
 

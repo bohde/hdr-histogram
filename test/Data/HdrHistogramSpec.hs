@@ -2,11 +2,10 @@
 module Data.HdrHistogramSpec where
 
 import           Data.HdrHistogram
-import           Data.HdrHistogram.Config
-import qualified Data.Vector              as U
+import qualified Data.Vector           as U
 import           Test.Expectations
 import           Test.Hspec
-import           Test.Hspec.QuickCheck    (prop)
+import           Test.Hspec.QuickCheck (prop)
 import           Test.Utils
 
 spec :: Spec
