@@ -3,7 +3,7 @@ version:             0.1.0.0
 synopsis:            Haskell implementation of High Dynamic Range (HDR) Histograms
 description:         Please see README.md
 homepage:            http://github.com/githubuser/hdr-histogram#readme
-license:             BSD3
+license:             GPL-3
 license-file:        LICENSE
 author:              Author name here
 maintainer:          example@example.com
