@@ -28,7 +28,7 @@ insert r h = do
 
 benchmarks :: [Benchmark]
 benchmarks = [
-  env (new) $ \ ~h ->
+  env new $ \ ~h ->
     bgroup "insert" [
       bench "1" $ nfIO (MH.record h 12000 >> return h),
       bench "10" $ nfIO (insert 10 h),
