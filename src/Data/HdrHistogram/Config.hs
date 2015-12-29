@@ -124,12 +124,10 @@ data Index = Index {
 
 {-# INLINEABLE asInt #-}
 asInt :: HistogramConfig a -> Index -> Int
-asInt c = go
+asInt c (Index b sub) = (sub' + bucket') - 1
   where
-    go (Index b sub) = (sub' + bucket') - 1
-      where
-        sub' = sub - subBucketHalfCount c
-        bucket' = (b + 1) `shift` subBucketHalfCountMagnitude c
+    sub' = sub - subBucketHalfCount c
+    bucket' = (b + 1) `shift` subBucketHalfCountMagnitude c
 
 fromInt :: HistogramConfig a -> Int -> Index
 fromInt c i = if bucket' < 0
@@ -143,21 +141,20 @@ fromInt c i = if bucket' < 0
 
 {-# INLINEABLE asIndex #-}
 asIndex :: (Integral a, FiniteBits a) => HistogramConfig a -> a -> Index
-asIndex c = go
+asIndex c a = Index bucket' sub
   where
     magnitude :: Int
     magnitude = unitMagnitude c
-    go a = Index bucket' sub
-      where
-        bucket' = m - (subBucketHalfCountMagnitude c + 1)
-          where
-            m :: Int
-            m = bitLength (a .|. subBucketMask c) - magnitude
 
-        sub = fromIntegral $ a `shiftR` toShift
-          where
-            toShift :: Int
-            toShift = bucket' + magnitude
+    bucket' = m - (subBucketHalfCountMagnitude c + 1)
+      where
+        m :: Int
+        m = bitLength (a .|. subBucketMask c) - magnitude
+
+    sub = fromIntegral $ a `shiftR` toShift
+      where
+        toShift :: Int
+        toShift = bucket' + magnitude
 
 fromIndex :: (Integral a, Bits a) => HistogramConfig a -> Index -> Range a
 fromIndex c (Index bucket' sub) = Range lower' upper'
