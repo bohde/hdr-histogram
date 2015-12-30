@@ -1,5 +1,7 @@
 # hdr-histogram
 
+[![Build Status](https://travis-ci.org/joshbohde/hdr-histogram.svg?branch=default)]
+
 ## Overview
 
 A Haskell implementation of [HdrHistogram](http://www.hdrhistogram.org/). It allows storing counts of observed values within a range,
