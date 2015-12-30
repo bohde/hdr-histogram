@@ -1,6 +1,6 @@
 # hdr-histogram
 
-[![Build Status](https://travis-ci.org/joshbohde/hdr-histogram.svg?branch=default)]
+[![Build Status](https://travis-ci.org/joshbohde/hdr-histogram.svg?branch=default)](https://travis-ci.org/joshbohde/hdr-histogram)
 
 ## Overview
 
