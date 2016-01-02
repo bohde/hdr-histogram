@@ -43,12 +43,13 @@ data Histogram config value count = Histogram {
 -- | Construct a 'Histogram' from the given 'HistogramConfig'
 empty :: forall config value count. (HasConfig config value, U.Unbox count, Integral count) => Histogram config value count
 empty = Histogram {
-  _config = getConfig p,
+  _config = c,
   totalCount = 0,
-  counts = U.replicate (size $ getConfig (Proxy :: Proxy config)) 0
+  counts = U.replicate (size c) 0
   }
   where
     p = Proxy :: Proxy config
+    c = getConfig p
 
 
 instance (HasConfig config value, U.Unbox count, Integral count) =>
