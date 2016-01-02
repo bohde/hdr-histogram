@@ -23,7 +23,7 @@ about 9ns, and allocates 16 bytes.
 {-# LANGUAGE ScopedTypeVariables   #-}
 module Data.HdrHistogram.Mutable (
   -- * Histogram
-  Histogram(..), new,
+  Histogram(..), new, fromConfig,
 
   -- * Writing
   record, recordValues,
@@ -47,6 +47,7 @@ import           Data.Proxy                  (Proxy (Proxy))
 import qualified Data.Vector.Unboxed         as U
 import qualified Data.Vector.Unboxed.Mutable as MU
 import           GHC.Generics                (Generic)
+import Data.Tagged (Tagged(Tagged))
 
 -- | A mutable 'Histogram'
 data Histogram s c value count = Histogram {
@@ -62,16 +63,23 @@ instance (NFData value, NFData count) => NFData (Histogram s config value count)
 new :: forall m config a count.
       (PrimMonad m, HasConfig config a, U.Unbox count, Integral count) =>
       m (Histogram (PrimState m) config a count)
-new = do
-  vect <- MU.replicate (size $ getConfig (Proxy :: Proxy config)) 0
+new = fromConfig (Tagged c :: Tagged config (HistogramConfig a))
+  where
+    c = getConfig p
+    p = Proxy :: Proxy config
+
+-- | Construct a 'Histogram' from the given 'HistogramConfig'. In this
+-- case 'c' is a phantom type.
+fromConfig :: (PrimMonad m, U.Unbox count, Integral count) => Tagged c (HistogramConfig value) -> m (Histogram (PrimState m) c value count)
+fromConfig (Tagged c) = do
+  vect <- MU.replicate (size c) 0
   totals <- newMutVar 0
   return Histogram {
-    _config = getConfig p,
+    _config = c,
     totalCount = totals,
     counts = vect
   }
-  where
-    p = Proxy :: Proxy config
+
 
 {-# INLINEABLE record #-}
 -- | Record value single value to the 'Histogram'

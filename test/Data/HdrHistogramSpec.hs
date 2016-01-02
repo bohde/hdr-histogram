@@ -20,12 +20,13 @@ spec =
         h = foldr (flip record) empty [1..10]
       (upper . (`percentile` 90.0)) h `shouldBe` 9
 
---    prop "should be close to reference implementation" $ \(ConfigAndVals c (vals :: [Int])) -> do
---      let
---        v = U.fromList vals
---        median' = median v
---        h :: Histogram Int Int
---        h = U.foldl record (histogram c) v
---        p = percentile h 50
---      lower p `shouldBeLessThanOrEqual` median'
---      upper p `shouldBeGreaterThanOrEqual` median'
+    prop "should be close to reference implementation" $ \((ConfigAndVals c vals) :: ConfigAndVals c Int) -> do
+      let
+        empty' :: Histogram c Int Int
+        empty' = fromConfig c
+        v = U.fromList vals
+        median' = median v
+        h = U.foldl record empty' v
+        p = percentile h 50
+      lower p `shouldBeLessThanOrEqual` median'
+      upper p `shouldBeGreaterThanOrEqual` median'

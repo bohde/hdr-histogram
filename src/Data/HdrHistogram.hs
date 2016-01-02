@@ -16,7 +16,7 @@ digits.
 {-# LANGUAGE ScopedTypeVariables #-}
 module Data.HdrHistogram (
   -- * Histogram
-  Histogram(..), empty,
+  Histogram(..), empty, fromConfig,
   -- * Writing
   record, recordValues,
   -- * Reading
@@ -32,6 +32,7 @@ import           Data.HdrHistogram.Config.Internal
 import           Data.Vector.Unboxed      ((!), (//))
 import qualified Data.Vector.Unboxed      as U
 import Data.Proxy (Proxy(Proxy))
+import Data.Tagged (Tagged(Tagged))
 
 -- | A pure 'Histogram'
 data Histogram config value count = Histogram {
@@ -40,17 +41,21 @@ data Histogram config value count = Histogram {
   counts     :: U.Vector count
 } deriving (Eq, Show)
 
--- | Construct a 'Histogram' from the given 'HistogramConfig'
+-- | Construct a 'Histogram'.
 empty :: forall config value count. (HasConfig config value, U.Unbox count, Integral count) => Histogram config value count
-empty = Histogram {
-  _config = c,
-  totalCount = 0,
-  counts = U.replicate (size c) 0
-  }
+empty = fromConfig (Tagged c :: Tagged config (HistogramConfig value))
   where
     p = Proxy :: Proxy config
     c = getConfig p
 
+-- | Construct a 'Histogram' from the given 'HistogramConfig'. In this
+-- case 'c' is a phantom type.
+fromConfig :: (U.Unbox count, Integral count) => Tagged c (HistogramConfig value) -> Histogram c value count
+fromConfig (Tagged c) = Histogram {
+  _config = c,
+  totalCount = 0,
+  counts = U.replicate (size c) 0
+  }
 
 instance (HasConfig config value, U.Unbox count, Integral count) =>
          Monoid (Histogram config value count) where
