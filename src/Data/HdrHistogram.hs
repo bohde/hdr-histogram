@@ -13,9 +13,7 @@ digits.
 
 -}
 {-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE AllowAmbiguousTypes #-}
 module Data.HdrHistogram (
   -- * Histogram
   Histogram(..), empty,
