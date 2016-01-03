@@ -23,7 +23,7 @@ module Data.HdrHistogram (
   Range(..),
   percentile,
   -- * Re-exports
-  Config, mkConfig, HasConfig
+  Config, HasConfig
   ) where
 
 import           Data.Bits                         (Bits, FiniteBits)

@@ -21,8 +21,10 @@ and from 'Int' indices, regardless of mutability or memory layout.
 {-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE TypeOperators       #-}
 module Data.HdrHistogram.Config (
+  -- * Config
+  Config, HighLow, SigBounds,
+  HasConfig(getConfig),
   -- * HistogramConfig
-  Config, mkConfig, getConfig, HasConfig,
   size,
   indexForValue,
   Range(..),
@@ -34,15 +36,16 @@ import Data.Proxy (Proxy(Proxy))
 import           GHC.TypeLits (KnownNat, Nat, type (<=), type (-), natVal)
 import           Data.HdrHistogram.Config.Internal
 
+{- $Config -}
+-- | Type-safe configuration for a Histogram
 data Config (lowest :: Nat) (highest :: Nat) (sig :: Nat)
 
-type SigBounds sig = (1 <= sig, sig <= 5)
 type HighLow a b = (a <= (b - 1))
 
-mkConfig :: (HighLow low high, SigBounds sig)
-           => Proxy (Config low high sig)
-mkConfig = Proxy
+-- | Significant Figures must be between 1 & 5
+type SigBounds sig = (1 <= sig, sig <= 5)
 
+-- | Typeclass to specify the types which can produce a HistogramConfig
 class HasConfig s where
   getConfig :: (Integral a, FiniteBits a) => Proxy s -> HistogramConfig a
 
@@ -55,6 +58,7 @@ instance (KnownNat low, KnownNat high, KnownNat sig, HighLow low high, SigBounds
       high' = fromIntegral $ natVal $ (Proxy :: Proxy high)
       sig' = fromIntegral $ natVal $ (Proxy :: Proxy sig)
 
+{- $HistogramConfig -}
 {-# INLINEABLE indexForValue #-}
 -- | The index for a value
 indexForValue :: (FiniteBits a, Integral a) =>

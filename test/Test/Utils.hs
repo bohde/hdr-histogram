@@ -3,7 +3,6 @@ module Test.Utils where
 
 import           Control.Monad.ST                  (runST)
 import           Data.Bits                         (Bits)
-import           Data.HdrHistogram
 import           Data.HdrHistogram.Config.Internal
 import           Data.Tagged                       (Tagged (Tagged))
 import           Data.Vector                       ((!))

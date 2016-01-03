@@ -32,7 +32,7 @@ module Data.HdrHistogram.Mutable (
   freeze, unsafeFreeze, thaw, unsafeThaw,
 
   -- * Re-exports
-  Config, mkConfig, HasConfig
+  Config, HasConfig
   ) where
 
 import           Control.DeepSeq                   (NFData, deepseq, rnf)
@@ -59,7 +59,7 @@ data Histogram s c value count = Histogram {
 instance (NFData value, NFData count) => NFData (Histogram s config value count) where
   rnf (Histogram c _ vec) = deepseq c $ deepseq vec ()
 
--- | Construct a 'Histogram' from the given 'HistogramConfig'
+-- | Construct a 'Histogram'
 new :: forall m config a count.
       (PrimMonad m, HasConfig config,
        Integral a, FiniteBits a,
@@ -102,28 +102,28 @@ recordValues h val count = do
       a <- MU.unsafeRead v i
       MU.unsafeWrite v i (f a)
 
--- | Convert a mutable 'Histogram' to a pure
+-- | Convert a mutable 'Histogram' to a pure 'Histogram'
 freeze :: (MU.Unbox count, PrimMonad m) => Histogram (PrimState m) config value count -> m (H.Histogram config value count)
 freeze (Histogram c total vec) = do
   t <- readMutVar total
   v <- U.freeze vec
   return $ H.Histogram c t v
 
--- | Convert a mutable 'Histogram' to a pure. The mutable cannot counte reused after this.
+-- | Convert a mutable 'Histogram' to a pure 'Histogram'. The mutable cannot counte reused after this.
 unsafeFreeze :: (MU.Unbox count, PrimMonad m) => Histogram (PrimState m) config value count -> m (H.Histogram config value count)
 unsafeFreeze (Histogram c total vec) = do
   t <- readMutVar total
   v <- U.unsafeFreeze vec
   return $ H.Histogram c t v
 
--- | Convert a pure 'Histogram' to a mutable.
+-- | Convert a pure 'Histogram' to a mutable 'Histogram'.
 thaw :: (MU.Unbox count, PrimMonad m) => H.Histogram config value count -> m (Histogram (PrimState m) config value count)
 thaw (H.Histogram c total vec) = do
   t <- newMutVar total
   v <- U.thaw vec
   return $ Histogram c t v
 
--- | Convert a pure 'Histogram' to a mutable. The pure cannot counte reused after this.
+-- | Convert a pure 'Histogram' to a mutable 'Histogram'. The pure cannot counte reused after this.
 unsafeThaw :: (MU.Unbox count, PrimMonad m) => H.Histogram config value count -> m (Histogram (PrimState m) config value count)
 unsafeThaw (H.Histogram c total vec) = do
   t <- newMutVar total
