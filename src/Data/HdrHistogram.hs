@@ -12,7 +12,7 @@ while maintaining precision to a configurable number of significant
 digits.
 
 -}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 module Data.HdrHistogram (
   -- * Histogram
@@ -26,13 +26,13 @@ module Data.HdrHistogram (
   Config, mkConfig, HasConfig
   ) where
 
-import           Data.Bits                (Bits, FiniteBits)
+import           Data.Bits                         (Bits, FiniteBits)
 import           Data.HdrHistogram.Config
 import           Data.HdrHistogram.Config.Internal
-import           Data.Vector.Unboxed      ((!), (//))
-import qualified Data.Vector.Unboxed      as U
-import Data.Proxy (Proxy(Proxy))
-import Data.Tagged (Tagged(Tagged))
+import           Data.Proxy                        (Proxy (Proxy))
+import           Data.Tagged                       (Tagged (Tagged))
+import           Data.Vector.Unboxed               ((!), (//))
+import qualified Data.Vector.Unboxed               as U
 
 -- | A pure 'Histogram'
 data Histogram config value count = Histogram {
@@ -42,7 +42,7 @@ data Histogram config value count = Histogram {
 } deriving (Eq, Show)
 
 -- | Construct a 'Histogram'.
-empty :: forall config value count. (HasConfig config value, U.Unbox count, Integral count) => Histogram config value count
+empty :: forall config value count. (HasConfig config, Integral value, FiniteBits value, U.Unbox count, Integral count) => Histogram config value count
 empty = fromConfig (Tagged c :: Tagged config (HistogramConfig value))
   where
     p = Proxy :: Proxy config
@@ -57,7 +57,7 @@ fromConfig (Tagged c) = Histogram {
   counts = U.replicate (size c) 0
   }
 
-instance (HasConfig config value, U.Unbox count, Integral count) =>
+instance (HasConfig config, Integral value, FiniteBits value, U.Unbox count, Integral count) =>
          Monoid (Histogram config value count) where
   mempty = empty
   Histogram config' t c `mappend` Histogram _ t' c' = Histogram config' (t + t') (U.zipWith (+) c c')

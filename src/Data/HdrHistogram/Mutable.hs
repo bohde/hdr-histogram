@@ -17,10 +17,10 @@ similar performance characteristics. Current recording benchmarks take
 about 9ns, and allocates 16 bytes.
 
 -}
-{-# LANGUAGE RankNTypes     #-}
-{-# LANGUAGE DeriveGeneric         #-}
-{-# LANGUAGE FlexibleContexts      #-}
-{-# LANGUAGE ScopedTypeVariables   #-}
+{-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE RankNTypes          #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Data.HdrHistogram.Mutable (
   -- * Histogram
   Histogram(..), new, fromConfig,
@@ -35,19 +35,19 @@ module Data.HdrHistogram.Mutable (
   Config, mkConfig, HasConfig
   ) where
 
-import           Control.DeepSeq             (NFData, deepseq, rnf)
-import           Control.Monad.Primitive     (PrimMonad, PrimState)
-import           Data.Bits                   (FiniteBits)
-import qualified Data.HdrHistogram           as H
+import           Control.DeepSeq                   (NFData, deepseq, rnf)
+import           Control.Monad.Primitive           (PrimMonad, PrimState)
+import           Data.Bits                         (FiniteBits)
+import qualified Data.HdrHistogram                 as H
 import           Data.HdrHistogram.Config
 import           Data.HdrHistogram.Config.Internal
-import           Data.Primitive.MutVar       (MutVar, modifyMutVar', newMutVar,
-                                              readMutVar)
-import           Data.Proxy                  (Proxy (Proxy))
-import qualified Data.Vector.Unboxed         as U
-import qualified Data.Vector.Unboxed.Mutable as MU
-import           GHC.Generics                (Generic)
-import Data.Tagged (Tagged(Tagged))
+import           Data.Primitive.MutVar             (MutVar, modifyMutVar',
+                                                    newMutVar, readMutVar)
+import           Data.Proxy                        (Proxy (Proxy))
+import           Data.Tagged                       (Tagged (Tagged))
+import qualified Data.Vector.Unboxed               as U
+import qualified Data.Vector.Unboxed.Mutable       as MU
+import           GHC.Generics                      (Generic)
 
 -- | A mutable 'Histogram'
 data Histogram s c value count = Histogram {
@@ -61,7 +61,9 @@ instance (NFData value, NFData count) => NFData (Histogram s config value count)
 
 -- | Construct a 'Histogram' from the given 'HistogramConfig'
 new :: forall m config a count.
-      (PrimMonad m, HasConfig config a, U.Unbox count, Integral count) =>
+      (PrimMonad m, HasConfig config,
+       Integral a, FiniteBits a,
+       U.Unbox count, Integral count) =>
       m (Histogram (PrimState m) config a count)
 new = fromConfig (Tagged c :: Tagged config (HistogramConfig a))
   where

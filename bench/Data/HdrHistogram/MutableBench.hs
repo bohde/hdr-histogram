@@ -7,7 +7,7 @@ import           Criterion.Main
 import           Data.HdrHistogram.Config
 import qualified Data.HdrHistogram.Mutable as MH
 
-type Config' = Config 1 3600000000 3 Int
+type Config' = Config 1 3600000000 3
 
 insertRange :: PrimMonad m => Int -> MH.Histogram (PrimState m) Config' Int Int -> m (MH.Histogram (PrimState m) Config' Int Int)
 insertRange r h = do

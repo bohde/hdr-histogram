@@ -17,12 +17,9 @@ and from 'Int' indices, regardless of mutability or memory layout.
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE KindSignatures      #-}
 {-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE FlexibleContexts    #-}
 {-# LANGUAGE TypeFamilies        #-}
 {-# LANGUAGE TypeOperators       #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
-{-# LANGUAGE FunctionalDependencies      #-}
-{-# LANGUAGE FlexibleInstances      #-}
 module Data.HdrHistogram.Config (
   -- * HistogramConfig
   Config, mkConfig, getConfig, HasConfig,
@@ -37,21 +34,20 @@ import Data.Proxy (Proxy(Proxy))
 import           GHC.TypeLits (KnownNat, Nat, type (<=), type (-), natVal)
 import           Data.HdrHistogram.Config.Internal
 
-data Config (lowest :: Nat) (highest :: Nat) (sig :: Nat) value
+data Config (lowest :: Nat) (highest :: Nat) (sig :: Nat)
 
 type SigBounds sig = (1 <= sig, sig <= 5)
 type HighLow a b = (a <= (b - 1))
 
-mkConfig :: (HighLow low high, SigBounds sig, Integral value, FiniteBits value)
-           => Proxy (Config low high sig value)
+mkConfig :: (HighLow low high, SigBounds sig)
+           => Proxy (Config low high sig)
 mkConfig = Proxy
 
+class HasConfig s where
+  getConfig :: (Integral a, FiniteBits a) => Proxy s -> HistogramConfig a
 
-class HasConfig s a | s -> a where
-  getConfig :: Proxy s -> HistogramConfig a
-
-instance (KnownNat low, KnownNat high, KnownNat sig, HighLow low high, SigBounds sig, Integral value, FiniteBits value) =>
-         HasConfig (Config low high sig value) value where
+instance (KnownNat low, KnownNat high, KnownNat sig, HighLow low high, SigBounds sig) =>
+         HasConfig (Config low high sig) where
   {-# INLINEABLE getConfig #-}
   getConfig _ = config low' high' (SignificantFigures sig')
     where

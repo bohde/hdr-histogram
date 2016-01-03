@@ -9,7 +9,7 @@ import           Test.Hspec
 import           Test.Hspec.QuickCheck (prop)
 import           Test.Utils
 
-type Config' = Config 1 10 1 Int
+type Config' = Config 1 10 1
 
 spec :: Spec
 spec =
