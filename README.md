@@ -10,23 +10,22 @@ while maintaining precision to a configurable number of significant digits.
 
 ## Example
 
+    {-# LANGUAGE DataKinds           #-}
     {-# LANGUAGE ScopedTypeVariables #-}
+
     import           Control.Monad             (forM_)
     import qualified Data.HdrHistogram         as H
     import qualified Data.HdrHistogram.Mutable as MH
 
     vals :: [Int]
+    vals = undefined
 
-    -- Measurements from 1ms to 1 hour
-    config' :: Either String (H.HistogramConfig Int)
-    config' = H.significantFigures 3 >>= return . H.config 1 3600000
+    -- Measure from 1ms to 1 hour, with 3 points of precision
+    type Config = H.Config 1 3600000 3
 
     main :: IO ()
     main = do
-      case config' of
-        Left s -> print s
-        Right c' -> do
-          h <- MH.histogram c'
-          forM_ vals (MH.record h)
-          (frozen :: H.Histogram Int Int) <- MH.freeze h
-          print $ H.percentile frozen 50
+      h <- MH.new
+      forM_ vals (MH.record h)
+      (frozen :: H.Histogram Config Int Int) <- MH.freeze h
+      print $ H.percentile frozen 50

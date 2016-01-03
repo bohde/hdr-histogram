@@ -13,13 +13,13 @@ import           Test.Utils
 spec :: Spec
 spec =
   describe "Histogram" $
-    prop "should be close to reference implementation" $ \(ConfigAndVals c (vals :: [Int])) -> do
+    prop "should be close to reference implementation" $ \((ConfigAndVals c vals) :: ConfigAndVals c Int) -> do
       let
         v = U.fromList vals
         median' = median v
-        h :: Histogram Int Int
+        h :: Histogram c Int Int
         h = runST $ do
-          h' <- MH.histogram c
+          h' <- MH.fromConfig c
           U.forM_ v (MH.record h')
           MH.unsafeFreeze h'
         p = percentile h 50

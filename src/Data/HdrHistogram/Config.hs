@@ -13,31 +13,56 @@ digits.
 This module captures the common functionality of converting values to
 and from 'Int' indices, regardless of mutability or memory layout.
 -}
-{-# LANGUAGE DeriveGeneric              #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
+{-# LANGUAGE ConstraintKinds     #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE KindSignatures      #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE TypeFamilies        #-}
+{-# LANGUAGE TypeOperators       #-}
 module Data.HdrHistogram.Config (
-  -- * SignificantFigures
-  SignificantFigures,
-  significantFigures,
   -- * HistogramConfig
-  HistogramConfig, config, size,
+  Config, mkConfig, getConfig, HasConfig,
+  size,
   indexForValue,
   Range(..),
   rangeForIndex
   ) where
 
 import           Data.Bits                         (Bits, FiniteBits)
+import Data.Proxy (Proxy(Proxy))
+import           GHC.TypeLits (KnownNat, Nat, type (<=), type (-), natVal)
 import           Data.HdrHistogram.Config.Internal
+
+data Config (lowest :: Nat) (highest :: Nat) (sig :: Nat)
+
+type SigBounds sig = (1 <= sig, sig <= 5)
+type HighLow a b = (a <= (b - 1))
+
+mkConfig :: (HighLow low high, SigBounds sig)
+           => Proxy (Config low high sig)
+mkConfig = Proxy
+
+class HasConfig s where
+  getConfig :: (Integral a, FiniteBits a) => Proxy s -> HistogramConfig a
+
+instance (KnownNat low, KnownNat high, KnownNat sig, HighLow low high, SigBounds sig) =>
+         HasConfig (Config low high sig) where
+  {-# INLINEABLE getConfig #-}
+  getConfig _ = config low' high' (SignificantFigures sig')
+    where
+      low' = fromIntegral $ natVal $ (Proxy :: Proxy low)
+      high' = fromIntegral $ natVal $ (Proxy :: Proxy high)
+      sig' = fromIntegral $ natVal $ (Proxy :: Proxy sig)
 
 {-# INLINEABLE indexForValue #-}
 -- | The index for a value
-indexForValue :: (Integral a, Data.Bits.FiniteBits a) =>
+indexForValue :: (FiniteBits a, Integral a) =>
                 HistogramConfig a -> a -> Int
 indexForValue c = asInt c . asIndex c
 
 {-# INLINEABLE rangeForIndex #-}
 -- | The possible range of values for a given index
-rangeForIndex :: (Integral a, Data.Bits.Bits a) =>
+rangeForIndex :: (Integral a, Bits a) =>
                 HistogramConfig a -> Int -> Range a
 rangeForIndex c = fromIndex c . fromInt c

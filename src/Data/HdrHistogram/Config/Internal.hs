@@ -3,7 +3,7 @@
 {-# LANGUAGE ScopedTypeVariables        #-}
 module Data.HdrHistogram.Config.Internal (
   HistogramConfig, config, lowest, highest, sigFigures, bucketCount, subBucketCount, size,
-  SignificantFigures,
+  SignificantFigures(..),
   significantFigures,
   Range(..),
   Index(..),
@@ -125,7 +125,6 @@ config lowest' highest' s@(SignificantFigures sigfigs) = config'
       where
         effectiveHighest :: Integer
         effectiveHighest = fromIntegral highest'
-
         smallestUntrackable :: Integer
         smallestUntrackable = floor subBucketCount' `shift` unitMagnitude'
 
