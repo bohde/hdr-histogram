@@ -21,7 +21,8 @@ import qualified Data.HdrHistogram         as H
 import qualified Data.HdrHistogram.Mutable as MH
 
 {- $example
->
+> {-# LANGUAGE DataKinds           #-}
+> {-# LANGUAGE ScopedTypeVariables #-}
 >
 > import           Control.Monad             (forM_)
 > import qualified Data.HdrHistogram         as H
