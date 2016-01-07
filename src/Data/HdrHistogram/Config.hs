@@ -54,9 +54,9 @@ instance (KnownNat low, KnownNat high, KnownNat sig, HighLow low high, SigBounds
   {-# INLINEABLE getConfig #-}
   getConfig _ = config low' high' (SignificantFigures sig')
     where
-      low' = fromIntegral $ natVal $ (Proxy :: Proxy low)
-      high' = fromIntegral $ natVal $ (Proxy :: Proxy high)
-      sig' = fromIntegral $ natVal $ (Proxy :: Proxy sig)
+      low' = fromIntegral $ natVal (Proxy :: Proxy low)
+      high' = fromIntegral $ natVal (Proxy :: Proxy high)
+      sig' = fromIntegral $ natVal (Proxy :: Proxy sig)
 
 {- $HistogramConfig -}
 {-# INLINEABLE indexForValue #-}
