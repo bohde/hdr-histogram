@@ -1,6 +1,7 @@
 # hdr-histogram
 
 [![Build Status](https://travis-ci.org/joshbohde/hdr-histogram.svg?branch=default)](https://travis-ci.org/joshbohde/hdr-histogram)
+[![Code Climate](https://codeclimate.com/github/joshbohde/hdr-histogram/badges/gpa.svg)](https://codeclimate.com/github/joshbohde/hdr-histogram)
 
 ## Overview
 
