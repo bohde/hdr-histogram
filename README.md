@@ -2,6 +2,9 @@
 
 [![Build Status](https://travis-ci.org/joshbohde/hdr-histogram.svg?branch=default)](https://travis-ci.org/joshbohde/hdr-histogram)
 [![Code Climate](https://codeclimate.com/github/joshbohde/hdr-histogram/badges/gpa.svg)](https://codeclimate.com/github/joshbohde/hdr-histogram)
+[![Hackage](https://img.shields.io/hackage/v/hdr-histogram.svg)](http://hackage.haskell.org/package/hdr-histogram)
+[![Hackage-Deps](https://img.shields.io/hackage-deps/v/hdr-histogram.svg)](http://packdeps.haskellers.com/feed?needle=hdr-histogram)
+
 
 ## Overview
 
