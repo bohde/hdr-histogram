@@ -58,9 +58,13 @@ fromConfig (Tagged c) = Histogram {
   }
 
 instance (HasConfig config, Integral value, FiniteBits value, U.Unbox count, Integral count) =>
+         Semigroup (Histogram config value count) where
+  Histogram config' t c <> Histogram _ t' c' = Histogram config' (t + t') (U.zipWith (+) c c')
+
+instance (HasConfig config, Integral value, FiniteBits value, U.Unbox count, Integral count) =>
          Monoid (Histogram config value count) where
   mempty = empty
-  Histogram config' t c `mappend` Histogram _ t' c' = Histogram config' (t + t') (U.zipWith (+) c c')
+  mappend = (<>)
 
 -- | Record a single value to the 'Histogram'
 record :: (U.Unbox count,
